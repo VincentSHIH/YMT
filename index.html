@@ -10,8 +10,8 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   
   <!-- Leaflet Map CSS & JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   
   <script>
     tailwind.config = {
@@ -27,22 +27,23 @@
   </script>
   
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
     
-    /* 免 Key 深色濾鏡：將標準 OSM 地圖轉為俐落的深色科技風 */
-    .dark-map .leaflet-tile {
-      filter: brightness(0.65) invert(1) contrast(3) hue-rotate(200deg) saturate(0.25) brightness(0.7);
+    #map {
+      height: 480px;
+      width: 100%;
+      background: #090d16;
     }
     
     .leaflet-popup-content-wrapper {
-      background: #090d16 !important;
+      background: #0f172a !important;
       color: #f1f5f9 !important;
-      border: 1px solid #1e293b !important;
+      border: 1px solid #334155 !important;
       border-radius: 0.75rem !important;
       box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5) !important;
     }
-    .leaflet-popup-tip { background: #090d16 !important; border: 1px solid #1e293b !important; }
+    .leaflet-popup-tip { background: #0f172a !important; border: 1px solid #334155 !important; }
     .custom-pin {
       display: flex;
       align-items: center;
@@ -52,11 +53,11 @@
       color: white;
       font-size: 11px;
       border: 2px solid #ffffff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.6);
       cursor: pointer;
       transition: transform 0.2s ease;
     }
-    .custom-pin:hover { transform: scale(1.2); z-index: 1000 !important; }
+    .custom-pin:hover { transform: scale(1.25); z-index: 1000 !important; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-teal-500 selection:text-white">
@@ -141,26 +142,26 @@
 
         <!-- Quick View Buttons -->
         <div class="flex items-center gap-1.5 text-xs">
-          <button onclick="resetMapView()" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-300">全國視角</button>
-          <button onclick="zoomToRegion('kantou')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-300">關東圈</button>
-          <button onclick="zoomToRegion('tokyo')" class="px-2 py-1 bg-sky-900/60 border border-sky-800 hover:bg-sky-800 rounded text-sky-200">東京都核心</button>
-          <button onclick="zoomToRegion('west')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-300">中西日本 / 返送</button>
+          <button onclick="resetMapView()" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 transition">全國視角</button>
+          <button onclick="zoomToRegion('kantou')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 transition">關東圈</button>
+          <button onclick="zoomToRegion('tokyo')" class="px-2 py-1 bg-sky-900/60 border border-sky-800 hover:bg-sky-800 rounded text-sky-200 transition">東京都核心</button>
+          <button onclick="zoomToRegion('west')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 transition">中西日本 / 返送</button>
         </div>
       </div>
 
-      <!-- Map Container with Dark Map Class -->
-      <div id="map" class="dark-map w-full h-[400px] sm:h-[460px] bg-slate-950 z-10"></div>
+      <!-- Map Container -->
+      <div id="map"></div>
 
       <!-- Map Legend -->
-      <div class="px-4 py-2 bg-slate-950/90 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
+      <div class="px-4 py-2 bg-slate-950/90 border-t border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
         <div class="flex items-center gap-4 flex-wrap">
           <span class="font-medium text-slate-300">圖例：</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-teal-500 border border-white inline-block"></span> A 組 (3人)</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-indigo-500 border border-white inline-block"></span> B 組 (3人)</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 border border-white inline-block"></span> 東京返送希望 (銀座本社集中作業)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-teal-500 border border-white inline-block"></span> A 組現場 (3人)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-indigo-500 border border-white inline-block"></span> B 組現場 (3人)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 border border-white inline-block"></span> 東京返送希望 (集中作業)</span>
         </div>
         <div class="text-[11px] text-slate-500">
-          💡 點選圓標可查看營業所明細，數字代表該站點檢台數
+          💡 點選地圖圓標可直接查看該營業所點檢資訊
         </div>
       </div>
     </div>
@@ -340,65 +341,77 @@
 
   <script>
     const stations = [
-      {"id":1,"name":"小岩営業所","pref":"東京都","postal":"133-0056","address":"東京都江戸川区南小岩1丁目1-17","units":1,"group":"A(3人)","date":"2026-11-08","time":"PM 14時～","lat":35.7275,"lng":139.8885},
-      {"id":2,"name":"高松上林営業所","pref":"香川県","postal":"761-0302","address":"香川県高松市上林町字竹部77","units":2,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":34.3012,"lng":134.0722},
-      {"id":3,"name":"港天王洲営業所","pref":"東京都","postal":"108-0075","address":"東京都港区港南5-3-27","units":10,"group":"A(3人)","date":"2026-11-04","time":"AM 9時～","lat":35.62,"lng":139.752},
-      {"id":4,"name":"港南営業所","pref":"東京都","postal":"108-0075","address":"東京都港区港南2-13-26","units":15,"group":"A(3人)","date":"2026-11-04","time":"PM 14時～","lat":35.6255,"lng":139.7485},
-      {"id":5,"name":"板橋北営業所","pref":"東京都","postal":"174-0041","address":"東京都板橋区舟渡4-3-1","units":20,"group":"B(3人)","date":"2026-11-03","time":"AM 9時～","lat":35.7925,"lng":139.6845},
-      {"id":6,"name":"ひたちなか営業所","pref":"茨城県","postal":"312-0062","address":"茨城県ひたちなか市高場1608-81","units":2,"group":"A(3人)","date":"2026-11-07","time":"PM16:30～","lat":36.415,"lng":140.542},
-      {"id":7,"name":"広島観音営業所","pref":"広島県","postal":"733-0036","address":"広島県広島市西区観音新町4丁目10-101","units":2,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":34.3725,"lng":132.4285},
-      {"id":8,"name":"東青梅営業所","pref":"東京都","postal":"198-0042","address":"東京都青梅市東青梅5丁目22-3","units":1,"group":"A(3人)","date":"2026-11-09","time":"AM 9時～","lat":35.792,"lng":139.2785},
-      {"id":9,"name":"足立新田営業所","pref":"東京都","postal":"123-0865","address":"東京都足立区新田1-9-1","units":11,"group":"A(3人)","date":"2026-11-03","time":"PM 14時～","lat":35.7625,"lng":139.7285},
-      {"id":10,"name":"三鷹野崎営業所","pref":"東京都","postal":"181-0014","address":"東京都三鷹市野崎3-21-17","units":10,"group":"B(3人)","date":"2026-11-04","time":"AM 9時～","lat":35.6825,"lng":139.5425},
-      {"id":11,"name":"広島観音営業所(追加)","pref":"広島県","postal":"733-0036","address":"広島県広島市西区観音新町4丁目10-101","units":1,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":34.3725,"lng":132.4285},
-      {"id":12,"name":"豊田若園営業所","pref":"愛知県","postal":"473-0932","address":"愛知県豊田市堤町寺池上63-3","units":3,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":35.035,"lng":137.098},
-      {"id":13,"name":"中央林間営業所","pref":"神奈川県","postal":"242-0008","address":"神奈川県大和市中央林間西3-7-1","units":6,"group":"B(3人)","date":"2026-11-06","time":"AM 9時～","lat":35.5125,"lng":139.442},
-      {"id":14,"name":"呉中央営業所","pref":"広島県","postal":"737-0831","address":"広島県呉市光町6-32","units":1,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":34.238,"lng":132.552},
-      {"id":15,"name":"若葉台営業所","pref":"東京都","postal":"206-0822","address":"東京都稲城市坂浜1493-1","units":3,"group":"B(3人)","date":"2026-11-05","time":"AM 9時～","lat":35.615,"lng":139.4785},
-      {"id":16,"name":"つくば平塚営業所","pref":"茨城県","postal":"305-0812","address":"茨城県つくば市東平塚1140-1","units":4,"group":"B(3人)","date":"2026-11-08","time":"AM 9時～","lat":36.105,"lng":140.1085},
-      {"id":17,"name":"水戸平須営業所","pref":"茨城県","postal":"310-0853","address":"茨城県水戸市平須町234-26","units":4,"group":"A(3人)","date":"2026-11-07","time":"PM 15時～","lat":36.3325,"lng":140.435},
-      {"id":18,"name":"東久留米南町","pref":"東京都","postal":"203-0031","address":"東京都東久留米市南町3-10-15","units":5,"group":"B(3人)","date":"2026-11-05","time":"PM 14時～","lat":35.748,"lng":139.525},
-      {"id":19,"name":"杉並南荻窪営業所","pref":"東京都","postal":"167-0052","address":"東京都杉並区南荻窪3-31-30","units":5,"group":"B(3人)","date":"2026-11-03","time":"PM 15:30～","lat":35.701,"lng":139.612},
-      {"id":20,"name":"燕営業所","pref":"新潟県","postal":"959-1286","address":"新潟県燕市小関1143-1","units":4,"group":"A(3人)","date":"2026-11-05","time":"PM 15:30～","lat":37.668,"lng":138.925},
-      {"id":21,"name":"水戸見川営業所","pref":"茨城県","postal":"310-0913","address":"茨城県水戸市見川町2131-1895","units":3,"group":"A(3人)","date":"2026-11-07","time":"PM 14時～","lat":36.368,"lng":140.438},
-      {"id":22,"name":"港有明営業所","pref":"東京都","postal":"135-0063","address":"東京都江東区有明3-15-13","units":4,"group":"A(3人)","date":"2026-11-08","time":"AM 9時～","lat":35.632,"lng":139.792},
-      {"id":23,"name":"水戸東原営業所","pref":"茨城県","postal":"310-0035","address":"茨城県水戸市東原2-10-37","units":5,"group":"A(3人)","date":"2026-11-07","time":"AM 9時～","lat":36.385,"lng":140.452},
-      {"id":24,"name":"成城営業所","pref":"東京都","postal":"157-0066","address":"東京都世田谷区成城1丁目4-19","units":3,"group":"A(3人)","date":"2026-11-09","time":"PM 14時～","lat":35.642,"lng":139.605},
-      {"id":25,"name":"大和郡山営業所","pref":"奈良県","postal":"639-1022","address":"奈良県大和郡山市豊浦町123-1","units":1,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":34.645,"lng":135.782},
-      {"id":26,"name":"東浦和営業所","pref":"埼玉県","postal":"336-0965","address":"埼玉県さいたま市緑区大字間宮字中622-1","units":8,"group":"A(3人)","date":"2026-11-06","time":"AM 9時～","lat":35.875,"lng":139.692},
-      {"id":27,"name":"長岡宮原営業所","pref":"新潟県","postal":"940-0083","address":"新潟県長岡市宮原2丁目195-1","units":20,"group":"A(3人)","date":"2026-11-05","time":"AM 9時～","lat":37.435,"lng":138.852},
-      {"id":28,"name":"港北綱島営業所","pref":"神奈川県","postal":"223-0057","address":"神奈川県横浜市港北区新羽町2618-1","units":8,"group":"B(3人)","date":"2026-11-06","time":"PM 14時～","lat":35.535,"lng":139.615},
-      {"id":29,"name":"瑞穂明前営業所","pref":"愛知県","postal":"467-0852","address":"愛知県名古屋市瑞穂区明前町10-39","units":6,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":35.118,"lng":136.925},
-      {"id":30,"name":"徳島城東営業所","pref":"徳島県","postal":"770-0862","address":"徳島県徳島市城東町1丁目194","units":9,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":34.072,"lng":134.568},
-      {"id":31,"name":"白藤営業所","pref":"熊本県","postal":"860-0068","address":"熊本県熊本市西区上代4丁目12-26","units":6,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":32.775,"lng":130.672},
-      {"id":32,"name":"国立府中営業所","pref":"東京都","postal":"183-0035","address":"東京都府中市四谷5-23-62 DPL国立府中1階","units":10,"group":"B(3人)","date":"2026-11-04","time":"PM 14時～","lat":35.665,"lng":139.442},
-      {"id":33,"name":"大野城営業所","pref":"福岡県","postal":"816-0901","address":"福岡県大野城市乙金東3-5-30","units":7,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":33.535,"lng":130.495},
-      {"id":34,"福岡粕屋営業所","pref":"福岡県","postal":"812-0065","address":"福岡県福岡市東区二又瀬新町8-45","units":4,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":33.615,"lng":130.448},
-      {"id":35,"name":"足立西保木間営業所","pref":"東京都","postal":"121-0812","address":"東京都足立区西保木間3-7-1","units":15,"group":"A(3人)","date":"2026-11-03","time":"AM 9時～","lat":35.798,"lng":139.805},
-      {"id":36,"name":"福島大玉営業所","pref":"福島県","postal":"969-1301","address":"福島県安達郡大玉村大山字向原79-1","units":7,"group":"B(3人)","date":"2026-11-07","time":"AM 10:30～","lat":37.552,"lng":140.375},
-      {"id":37,"name":"緑中山営業所","pref":"神奈川県","postal":"226-0012","address":"神奈川県横浜市緑区上山1丁目15-1","units":5,"group":"B(3人)","date":"2026-11-06","time":"PM 14時～","lat":35.515,"lng":139.538},
-      {"id":38,"name":"ＧＭ推進課 (銀座)","pref":"東京都","postal":"","address":"ヤマト銀座本社作業","units":16,"group":"A(3人)","date":"11/10～11/12","time":"AM 9時～17時","lat":35.671,"lng":139.765}
+      {"id": 1, "name": "小岩営業所", "pref": "東京都", "address": "東京都江戸川区南小岩1丁目1-17", "units": 1, "group": "A(3人)", "date": "2026-11-08", "time": "PM 14時～", "lat": 35.7275, "lng": 139.8885},
+      {"id": 2, "name": "高松上林営業所", "pref": "香川県", "address": "香川県高松市上林町字竹部77", "units": 2, "group": "東京返送希望", "date": "11/10～11/12", "time": "AM 9時～17時", "lat": 34.3012, "lng": 134.0722},
+      {"id": 3, "name": "港天王洲営業所", "pref": "東京都", "address": "東京都港区港南5-3-27", "units": 10, "group": "A(3人)", "date": "2026-11-04", "time": "AM 9時～", "lat": 35.62, "lng": 139.752},
+      {"id": 4, "name": "港南営業所", "pref": "東京都", "address": "東京都港区港南2-13-26", "units": 15, "group": "A(3人)", "date": "2026-11-04", "time": "PM 14時～", "lat": 35.6255, "lng": 139.7485},
+      {"id": 5, "name": "板橋北営業所", "pref": "東京都", "address": "東京都板橋区舟渡4-3-1", "units": 20, "group": "B(3人)", "date": "2026-11-03", "time": "AM 9時～", "lat": 35.7925, "lng": 139.6845},
+      {"id": 6, "name": "ひたちなか営業所", "pref": "茨城県", "address": "茨城県ひたちなか市高場1608-81", "units": 2, "group": "A(3人)", "date": "2026-11-07", "time": "PM16:30～", "lat": 36.415, "lng": 140.542},
+      {"id": 7, "name": "広島観音営業所", "pref": "広島県", "address": "広島県広島市西区観音新町4丁目10-101", "units": 2, "group": "東京返送希望", "date": "11/10～11/12", "time": "AM 9時～17時", "lat": 34.3725, "lng": 132.4285},
+      {"id": 8, "name": "東青梅営業所", "pref": "東京都", "address": "東京都青梅市東青梅5丁目22-3", "units": 1, "group": "A(3人)", "date": "2026-11-09", "time": "AM 9時～", "lat": 35.792, "lng": 139.2785},
+      {"id": 9, "name": "足立新田営業所", "pref": "東京都", "address": "東京都足立区新田1-9-1", "units": 11, "group": "A(3人)", "date": "2026-11-03", "time": "PM 14時～", "lat": 35.7625, "lng": 139.7285},
+      {"id": 10, "name": "三鷹野崎営業所", "pref": "東京都", "address": "東京都三鷹市野崎3-21-17", "units": 10, "group": "B(3人)", "date": "2026-11-04", "time": "AM 9時～", "lat": 35.6825, "lng": 139.5425},
+      {"id": 11, "name": "広島観音営業所", "pref": "広島県", "address": "広島県広島市西区観音新町4丁目10-101", "units": 1, "group": "東京返送希望", "date": "11/10～11/12", "time": "AM 9時～17時", "lat": 34.3725, "lng": 132.4285},
+      {"id": 12, "name": "豊田若園営業所", "pref": "愛知県", "address": "愛知県豊田市堤町寺池上63-3", "units": 3, "group": "東京返送希望", "date": "11/10～11/12", "time": "AM 9時～17時", "lat": 35.035, "lng": 137.098},
+      {"id": 13, "name": "中央林間営業所", "pref": "神奈川県", "address": "神奈川県大和市中央林間西3-7-1", "units": 6, "group": "B(3人)", "date": "2026-11-06", "time": "AM 9時～", "lat": 35.5125, "lng": 139.442},
+      {"id": 14, "name": "呉中央営業所", "pref": "広島県", "address": "広島県呉市光町6-32", "units": 1, "group": "東京返送希望", "date": "11/10～11/12", "time": "AM 9時～17時", "lat": 34.238, "lng": 132.552},
+      {"id": 15, "name": "若葉台営業所", "pref": "東京都", "address": "東京都稲城市坂浜1493-1", "units": 3, "group": "B(3人)", "date": "2026-11-05", "time": "AM 9時～", "lat": 35.615, "lng": 139.4785},
+      {"id": 16, "name": "つくば平塚営業所", "pref": "茨城県", "address": "茨城県つくば市東平塚1140-1", "units": 4, "group": "B(3人)", "date": "2026-11-08", "time": "AM 9時～", "lat": 36.105, "lng": 140.1085},
+      {"id": 17, "name": "水戸平須営業所", "pref": "茨城県", "address": "茨城県水戸市平須町234-26", "units": 4, "group": "A(3人)", "date": "2026-11-07", "time": "PM 15時～", "lat": 36.3325, "lng": 140.435},
+      {"id": 18, "name": "東久留米南町", "pref": "東京都", "address": "東京都東久留米市南町3-10-15", "units": 5, "group": "B(3人)", "date": "2026-11-05", "time": "PM 14時～", "lat": 35.748, "lng": 139.525},
+      {"id": 19, "name": "杉並南荻窪営業所", "pref": "東京都", "address": "東京都杉並区南荻窪3-31-30", "units": 5, "group": "B(3人)", "date": "2026-11-03", "time": "PM 15:30～", "lat": 35.701, "lng": 139.612},
+      {"id": 20, "name": "燕営業所", "pref": "新潟県", "address": "新潟県燕市小関1143-1", "units": 4, "group": "A(3人)", "date": "2026-11-05", "time": "PM 15:30～", "lat": 37.668, "lng": 138.925},
+      {"id": 21, "name": "水戸見川営業所", "pref": "茨城県", "address": "茨城県水戸市見川町2131-1895", "units": 3, "group": "A(3人)", "date": "2026-11-07", "time": "PM 14時～", "lat": 36.368, "lng": 140.438},
+      {"id": 22, "name": "港有明営業所", "pref": "東京都", "address": "東京都江東区有明3-15-13", "units": 4, "group": "A(3人)", "date": "2026-11-08", "time": "AM 9時～", "lat": 35.632, "lng": 139.792},
+      {"id": 23, "name": "水戸東原営業所", "pref": "茨城県", "address": "茨城県水戸市東原2-10-37", "units": 5, "group": "A(3人)", "date": "2026-11-07", "time": "AM 9時～", "lat": 36.385, "lng": 140.452},
+      {"id": 24, "name": "成城営業所", "pref": "東京都", "address": "東京都世田谷区成城1丁目4-19", "units": 3, "group": "A(3人)", "date": "2026-11-09", "time": "PM 14時～", "lat": 35.642, "lng": 139.605},
+      {"id": 25, "name": "大和郡山営業所", "pref": "奈良県", "address": "奈良県大和郡山市豊浦町123-1", "units": 1, "group": "東京返送希望", "date": "11/10～11/12", "time": "AM 9時～17時", "lat": 34.645, "lng": 135.782},
+      {"id": 26, "name": "東浦和営業所", "pref": "埼玉県", "address": "埼玉県さいたま市緑区大字間宮字中622-1", "units": 8, "group": "A(3人)", "date": "2026-11-06", "time": "AM 9時～", "lat": 35.875, "lng": 139.692},
+      {"id": 27, "name": "長岡宮原営業所", "pref": "新潟県", "address": "新潟県長岡市宮原2丁目195-1", "units": 20, "group": "A(3人)", "date": "2026-11-05", "time": "AM 9時～", "lat": 37.435, "lng": 138.852},
+      {"id": 28, "name": "港北綱島営業所", "pref": "神奈川県", "address": "神奈川県横浜市港北区新羽町2618-1", "units": 8, "group": "B(3人)", "date": "2026-11-06", "time": "PM 14時～", "lat": 35.535, "lng": 139.615},
+      {"id": 29, "name": "瑞穂明前営業所", "pref": "愛知県", "address": "愛知県名古屋市瑞穂区明前町10-39", "units": 6, "group": "東京返送希望", "date": "11/10～11/12", "time": "AM 9時～17時", "lat": 35.118, "lng": 136.925},
+      {"id": 30, "name": "徳島城東営業所", "pref": "徳島県", "address": "徳島県徳島市城東町1丁目194", "units": 9, "group": "東京返送希望", "date": "11/10～11/12", "time": "AM 9時～17時", "lat": 34.072, "lng": 134.568},
+      {"id": 31, "name": "白藤営業所", "pref": "熊本県", "address": "熊本県熊本市西区上代4丁目12-26", "units": 6, "group": "東京返送希望", "date": "11/10～11/12", "time": "AM 9時～17時", "lat": 32.775, "lng": 130.672},
+      {"id": 32, "name": "国立府中営業所", "pref": "東京都", "address": "東京都府中市四谷5-23-62 DPL国立府中1階", "units": 10, "group": "B(3人)", "date": "2026-11-04", "time": "PM 14時～", "lat": 35.665, "lng": 139.442},
+      {"id": 33, "name": "大野城営業所", "pref": "福岡県", "address": "福岡県大野城市乙金東3-5-30", "units": 7, "group": "東京返送希望", "date": "11/10～11/12", "time": "AM 9時～17時", "lat": 33.535, "lng": 130.495},
+      {"id": 34, "name": "福岡粕屋営業所", "pref": "福岡県", "address": "福岡県福岡市東区二又瀬新町8-45", "units": 4, "group": "東京返送希望", "date": "11/10～11/12", "time": "AM 9時～17時", "lat": 33.615, "lng": 130.448},
+      {"id": 35, "name": "足立西保木間営業所", "pref": "東京都", "address": "東京都足立区西保木間3-7-1", "units": 15, "group": "A(3人)", "date": "2026-11-03", "time": "AM 9時～", "lat": 35.798, "lng": 139.805},
+      {"id": 36, "name": "福島大玉営業所", "pref": "福島県", "address": "福島県安達郡大玉村大山字向原79-1", "units": 7, "group": "B(3人)", "date": "2026-11-07", "time": "AM 10:30～", "lat": 37.552, "lng": 140.375},
+      {"id": 37, "name": "緑中山営業所", "pref": "神奈川県", "address": "神奈川県横浜市緑区上山1丁目15-1（ソシラ横浜港北内）", "units": 5, "group": "B(3人)", "date": "2026-11-06", "time": "PM 14時～", "lat": 35.515, "lng": 139.538},
+      {"id": 38, "name": "ＧＭ推進課", "pref": "東京都", "address": "ヤマト銀座本社作業", "units": 16, "group": "A(3人)", "date": "11/10～11/12", "time": "AM 9時～17時", "lat": 35.671, "lng": 139.765}
     ];
 
-    let map, markers = [];
+    let map = null;
+    let markers = [];
 
     function initMap() {
-      map = L.map('map', { center: [36.5, 138.0], zoom: 6, scrollWheelZoom: true });
+      // 初始化 Leaflet 地圖
+      map = L.map('map', {
+        center: [36.5, 138.0],
+        zoom: 6,
+        scrollWheelZoom: true
+      });
       
-      // 使用完全免費、免 Key 的 OpenStreetMap 圖資
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      // 完全免費、不需要 API Key 的開放圖資 (OpenStreetMap)
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
       }).addTo(map);
+
+      // 強制地圖容器自適應尺寸，防止初始灰色塊
+      setTimeout(() => {
+        if (map) map.invalidateSize();
+      }, 250);
 
       stations.forEach(s => {
         const bg = s.group.includes('A') ? '#14b8a6' : s.group.includes('B') ? '#6366f1' : '#f59e0b';
         const icon = L.divIcon({
-          html: `<div class="custom-pin" style="background:${bg};width:${s.units>10?32:26}px;height:${s.units>10?32:26}px;">${s.units}</div>`,
-          iconSize: [s.units>10?32:26, s.units>10?32:26],
-          iconAnchor: [(s.units>10?32:26)/2, (s.units>10?32:26)/2]
+          html: `<div class="custom-pin" style="background:${bg};width:${s.units > 10 ? 32 : 26}px;height:${s.units > 10 ? 32 : 26}px;">${s.units}</div>`,
+          iconSize: [s.units > 10 ? 32 : 26, s.units > 10 ? 32 : 26],
+          iconAnchor: [(s.units > 10 ? 32 : 26)/2, (s.units > 10 ? 32 : 26)/2]
         });
-        const m = L.marker([s.lat, s.lng], { icon }).addTo(map);
+        
+        const m = L.marker([s.lat, s.lng], { icon: icon }).addTo(map);
         m.bindPopup(`
           <div style="padding:12px;min-width:200px;">
             <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
@@ -418,21 +431,178 @@
     }
 
     function resetMapView() {
-      map.flyTo([36.5, 138.0], 6, { duration: 1 });
-      document.getElementById('mapSubtitle').innerText = '(共 38 所 / 247 台)';
+      if (map) {
+        map.flyTo([36.5, 138.0], 6, { duration: 1 });
+        document.getElementById('mapSubtitle').innerText = '(共 38 所 / 247 台)';
+      }
     }
 
     function zoomToRegion(r) {
-      if(r==='tokyo') {
+      if (!map) return;
+      if (r === 'tokyo') {
         map.flyTo([35.6895, 139.6917], 10, { duration: 1 });
         document.getElementById('mapSubtitle').innerText = '(東京都核心區：15 所 / 129 台)';
-      } else if(r==='kantou') {
+      } else if (r === 'kantou') {
         map.flyTo([35.8, 139.8], 8, { duration: 1 });
         document.getElementById('mapSubtitle').innerText = '(關東都會圈：24 所 / 174 台)';
-      } else if(r==='west') {
+      } else if (r === 'west') {
         map.flyTo([34.5, 134.0], 7, { duration: 1 });
         document.getElementById('mapSubtitle').innerText = '(中西日本 / 返送希望區域)';
       }
     }
 
     function locateStation(id) {
+      const t = markers.find(m => m.id === id);
+      if (t && map) {
+        map.flyTo([t.data.lat, t.data.lng], 13, { duration: 1 });
+        t.marker.openPopup();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function navigate(tab) {
+      ['overview','prefs','list','tokyo'].forEach(t => {
+        const el = document.getElementById('view-' + t);
+        if (el) el.classList.toggle('hidden', t !== tab);
+      });
+      
+      document.querySelectorAll('.nav-tab').forEach(b => {
+        b.className = 'nav-tab px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition';
+      });
+      
+      const active = document.getElementById('nav-' + tab);
+      if (active) active.className = 'nav-tab px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-teal-600 transition';
+
+      if (tab === 'tokyo') zoomToRegion('tokyo');
+      else if (tab === 'overview' || tab === 'prefs') resetMapView();
+
+      setTimeout(() => {
+        if (map) map.invalidateSize();
+      }, 150);
+
+      if (window.location.hash !== '#' + tab) {
+        history.pushState(null, null, '#' + tab);
+      }
+    }
+
+    function renderPrefectures() {
+      const pMap = {};
+      stations.forEach(s => {
+        const p = s.pref;
+        if (!pMap[p]) pMap[p] = { count: 0, units: [] };
+        pMap[p].count += s.units;
+        pMap[p].units.push(s.name);
+      });
+      const sorted = Object.entries(pMap).sort((a,b) => b[1].count - a[1].count);
+
+      document.getElementById('prefSelect').innerHTML = '<option value="ALL">全部都道府縣 (14)</option>' + sorted.map(([p, data]) => `
+        <option value="${p}">${p} (${data.count}台)</option>
+      `).join('');
+
+      document.getElementById('prefCardsGrid').innerHTML = sorted.map(([p, data]) => `
+        <div onclick="selectPref('${p}')" class="p-4 bg-slate-900 border border-slate-800 hover:border-teal-500 rounded-2xl cursor-pointer transition">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-bold text-white text-sm">${p}</span>
+            <span class="text-[11px] mono text-slate-400">${data.units.length} 所</span>
+          </div>
+          <div class="mono text-2xl font-bold text-teal-400">${data.count} <span class="text-xs font-normal text-slate-400">台</span></div>
+          <div class="mt-2 text-[10px] text-slate-500 truncate">${data.units.join('、')}</div>
+        </div>
+      `).join('');
+    }
+
+    function selectPref(p) {
+      document.getElementById('prefSelect').value = p;
+      navigate('list');
+      filterAndRenderTable();
+      const st = stations.filter(s => s.pref.includes(p));
+      if (st.length > 0 && map) {
+        map.flyTo([st[0].lat, st[0].lng], st.length > 3 ? 9 : 11);
+      }
+    }
+
+    function filterAndRenderTable() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const p = document.getElementById('prefSelect').value;
+      const g = document.getElementById('groupSelect').value;
+
+      const filtered = stations.filter(s => {
+        const matchQ = s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q) || s.date.includes(q);
+        const matchP = (p === 'ALL') || s.pref.includes(p);
+        const matchG = (g === 'ALL') || s.group.includes(g);
+        return matchQ && matchP && matchG;
+      });
+
+      document.getElementById('filteredStats').innerText = `${filtered.length} 所 / ${filtered.reduce((a,b)=>a+b.units,0)} 台`;
+
+      document.getElementById('stationTableBody').innerHTML = filtered.map(s => {
+        const isA = s.group.includes('A');
+        const isB = s.group.includes('B');
+        const badge = isA ? 'text-teal-400 bg-teal-500/10 border-teal-500/30' : isB ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30' : 'text-amber-400 bg-amber-500/10 border-amber-500/30';
+        return `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="py-2.5 px-4 mono text-slate-500">#${String(s.id).padStart(2,'0')}</td>
+            <td class="py-2.5 px-4 font-semibold text-white">${s.name}</td>
+            <td class="py-2.5 px-4">${s.pref}</td>
+            <td class="py-2.5 px-4 mono font-bold text-teal-400">${s.units} <span class="text-[10px] font-normal text-slate-400">台</span></td>
+            <td class="py-2.5 px-4"><span class="text-[11px] px-2 py-0.5 rounded border ${badge}">${s.group}</span></td>
+            <td class="py-2.5 px-4 mono text-slate-300">${s.date}</td>
+            <td class="py-2.5 px-4 text-slate-400">${s.time}</td>
+            <td class="py-2.5 px-4 text-slate-400 truncate max-w-xs" title="${s.address}">${s.address}</td>
+            <td class="py-2.5 px-4 text-right">
+              <button onclick="locateStation(${s.id})" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-teal-400 rounded text-xs transition">📍 定位</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderTokyoCards() {
+      document.getElementById('tokyoCardsGrid').innerHTML = stations.filter(s => s.pref.includes('東京')).map(s => `
+        <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl hover:border-sky-500/50 transition">
+          <div class="flex justify-between text-xs text-slate-500 mb-1">
+            <span class="mono">#${String(s.id).padStart(2,'0')}</span>
+            <span class="text-sky-400">${s.group}</span>
+          </div>
+          <div class="font-bold text-white text-base">${s.name}</div>
+          <div class="text-xs text-slate-400 truncate mt-1">${s.address}</div>
+          <div class="flex justify-between items-center mt-3 pt-2 border-t border-slate-800 text-xs">
+            <span class="mono text-slate-400">${s.date}</span>
+            <div class="flex items-center gap-2">
+              <span class="mono font-bold text-sky-400 text-base">${s.units} 台</span>
+              <button onclick="locateStation(${s.id})" class="px-2 py-1 bg-slate-800 text-sky-400 rounded text-xs hover:bg-slate-700">定位</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function exportCSV() {
+      let csv = "ID,營業所名,都道府縣,住所,台數,組別,預定作業日,時段\n";
+      stations.forEach(s => {
+        csv += `${s.id},"${s.name}","${s.pref}","${s.address}",${s.units},"${s.group}","${s.date}","${s.time}"\n`;
+      });
+      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "YMT_247台點檢清單.csv";
+      a.click();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      initMap();
+      renderPrefectures();
+      filterAndRenderTable();
+      renderTokyoCards();
+
+      const hash = window.location.hash.replace('#','') || 'overview';
+      navigate(hash);
+    });
+
+    window.addEventListener('hashchange', () => {
+      navigate(window.location.hash.replace('#','') || 'overview');
+    });
+  </script>
+</body>
+</html>
