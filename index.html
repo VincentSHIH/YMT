@@ -5,46 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>YMT 新型充電器全數點檢專案管理 (247台限定)</title>
   
-  <!-- Tailwind CSS & Lucide Icons -->
+  <!-- Tailwind CSS & Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   
   <!-- Leaflet Map CSS & JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: { 50: '#f0fdfa', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e', 900: '#134e4a' }
-          }
-        }
-      }
-    };
-  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
   
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-    
     #map {
       height: 480px;
       width: 100%;
       background: #0f172a;
-      z-index: 1;
     }
-    
     .leaflet-popup-content-wrapper {
       background: #0f172a !important;
       color: #f1f5f9 !important;
       border: 1px solid #334155 !important;
       border-radius: 0.75rem !important;
-      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5) !important;
     }
-    .leaflet-popup-tip { background: #0f172a !important; border: 1px solid #334155 !important; }
+    .leaflet-popup-tip { background: #0f172a !important; }
     .custom-pin {
       display: flex;
       align-items: center;
@@ -56,42 +39,462 @@
       border: 2px solid #ffffff;
       box-shadow: 0 2px 5px rgba(0,0,0,0.6);
       cursor: pointer;
-      transition: transform 0.2s ease;
+      transition: transform 0.2s;
     }
-    .custom-pin:hover { transform: scale(1.25); z-index: 1000 !important; }
+    .custom-pin:hover { transform: scale(1.2); }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-teal-500 selection:text-white">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
 
   <!-- Header -->
   <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400">
-          <i data-lucide="zap" class="w-5 h-5"></i>
+        <div class="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400 font-bold">
+          YMT
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="font-bold text-base sm:text-lg text-white">YMT 新型充電器全數點檢看板</h1>
+            <h1 class="font-bold text-base sm:text-lg text-white">新型充電器全數點檢看板</h1>
             <span class="text-[11px] px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/30 mono font-semibold">247台限定</span>
           </div>
-          <p class="text-xs text-slate-400">量產前樣機 (AF0JYT-20AP1系列) 營業所巡檢追蹤與管理系統</p>
+          <p class="text-xs text-slate-400">量產前樣機 (AF0JYT-20AP1系列) 營業所巡檢管理系統</p>
         </div>
       </div>
 
-      <!-- Quick Stats -->
-      <div class="flex items-center gap-4 sm:gap-6 text-xs">
+      <!-- Quick Metrics -->
+      <div class="flex items-center gap-6 text-xs">
         <div class="text-right">
           <span class="text-slate-400 block text-[10px]">點檢總台數</span>
-          <span class="mono font-bold text-lg text-teal-400">247 <span class="text-xs font-normal text-slate-400">台</span></span>
+          <span class="mono font-bold text-lg text-teal-400">247 <span class="text-xs text-slate-400 font-normal">台</span></span>
         </div>
-        <div class="text-right border-l border-slate-800 pl-4 sm:pl-6">
+        <div class="text-right border-l border-slate-800 pl-6">
           <span class="text-slate-400 block text-[10px]">巡檢營業所</span>
-          <span class="mono font-bold text-lg text-white">38 <span class="text-xs font-normal text-slate-400">站</span></span>
+          <span class="mono font-bold text-lg text-white">38 <span class="text-xs text-slate-400 font-normal">站</span></span>
         </div>
-        <div class="text-right border-l border-slate-800 pl-4 sm:pl-6 hidden sm:block">
+        <div class="text-right border-l border-slate-800 pl-6">
           <span class="text-slate-400 block text-[10px]">涵蓋區域</span>
-          <span class="mono font-bold text-lg text-indigo-400">14 <span class="text-xs font-normal text-slate-400">都縣</span></span>
+          <span class="mono font-bold text-lg text-indigo-400">14 <span class="text-xs text-slate-400 font-normal">都縣</span></span>
         </div>
-        <div class="text-right border-l border-slate-800 pl-4 sm:pl-6 hidden md:block">
-          <span class
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="border-t border-slate-800/80 bg-slate-900/50 px-4">
+      <div class="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto gap-2 py-2">
+        <nav class="flex items-center gap-2">
+          <button type="button" onclick="navigate('overview')" id="nav-overview" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-teal-600 transition">全國總覽</button>
+          <button type="button" onclick="navigate('prefs')" id="nav-prefs" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">各都縣彙整</button>
+          <button type="button" onclick="navigate('list')" id="nav-list" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">站點清單</button>
+          <button type="button" onclick="navigate('tokyo')" id="nav-tokyo" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">東京都專區</button>
+        </nav>
+        <button type="button" onclick="exportCSV()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300">匯出 CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View -->
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6 flex-1 w-full">
+
+    <!-- Leaflet Map Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+      <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse"></span>
+          <h2 class="font-bold text-sm text-white">日本巡檢地理拓撲圖 <span id="mapSubtitle" class="text-xs font-normal text-slate-400">(共 38 所 / 247 台)</span></h2>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <button type="button" onclick="resetMapView()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">🇯🇵 日本全圖</button>
+          <button type="button" onclick="zoomTo('kantou')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">關東圈 (174台)</button>
+          <button type="button" onclick="zoomTo('tokyo')" class="px-2.5 py-1 bg-sky-900/60 border border-sky-800 hover:bg-sky-800 rounded-lg text-sky-200">東京都 (129台)</button>
+          <button type="button" onclick="zoomTo('west')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">西日本 / 返送</button>
+        </div>
+      </div>
+      
+      <!-- Map Container -->
+      <div id="map"></div>
+      
+      <div class="px-4 py-2 bg-slate-950 border-t border-slate-800 flex items-center gap-6 text-xs text-slate-400">
+        <span class="font-medium text-slate-300">圖例：</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-teal-600 inline-block border border-white"></span> A 組 (3人)</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-indigo-600 inline-block border border-white"></span> B 組 (3人)</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-600 inline-block border border-white"></span> 東京返送希望 (銀座集中)</span>
+      </div>
+    </div>
+
+    <!-- TAB 1: 全國總覽 -->
+    <section id="view-overview" class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+          <div class="text-xs text-slate-400 mb-1">A 組現場巡檢 (18 站)</div>
+          <div class="mono text-2xl font-bold text-teal-400">128 <span class="text-xs font-normal text-slate-400">台 (51.8%)</span></div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+          <div class="text-xs text-slate-400 mb-1">B 組現場巡檢 (12 站)</div>
+          <div class="mono text-2xl font-bold text-indigo-400">92 <span class="text-xs font-normal text-slate-400">台 (37.2%)</span></div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+          <div class="text-xs text-slate-400 mb-1">東京返送處理 (8 站)</div>
+          <div class="mono text-2xl font-bold text-amber-400">27 <span class="text-xs font-normal text-slate-400">台 (11.0%)</span></div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+          <div class="text-xs text-slate-400 mb-1">東京都合計 (15 站)</div>
+          <div class="mono text-2xl font-bold text-sky-400">129 <span class="text-xs font-normal text-slate-400">台 (52.2%)</span></div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl">
+        <h3 class="font-bold text-sm text-white mb-3">排程推進概況 (11/03 ~ 11/12)</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs">
+          <div class="p-3 bg-slate-950 border border-slate-800 rounded-lg">
+            <div class="mono font-bold text-teal-400">11/03 (二)</div>
+            <div class="text-slate-400 mt-1">板橋北 (20台)<br>足立新田 (11台)</div>
+            <div class="text-slate-200 mt-2 font-semibold">計 51 台</div>
+          </div>
+          <div class="p-3 bg-slate-950 border border-slate-800 rounded-lg">
+            <div class="mono font-bold text-teal-400">11/04 (三)</div>
+            <div class="text-slate-400 mt-1">港南 (15台)<br>港天王洲 (10台)</div>
+            <div class="text-slate-200 mt-2 font-semibold">計 45 台</div>
+          </div>
+          <div class="p-3 bg-slate-950 border border-slate-800 rounded-lg">
+            <div class="mono font-bold text-teal-400">11/05 (四)</div>
+            <div class="text-slate-400 mt-1">長岡宮原 (20台)<br>燕 (4台)</div>
+            <div class="text-slate-200 mt-2 font-semibold">計 32 台</div>
+          </div>
+          <div class="p-3 bg-slate-950 border border-slate-800 rounded-lg">
+            <div class="mono font-bold text-teal-400">11/06 (五)</div>
+            <div class="text-slate-400 mt-1">東浦和 (8台)<br>中央林間 (6台)</div>
+            <div class="text-slate-200 mt-2 font-semibold">計 27 台</div>
+          </div>
+          <div class="p-3 bg-slate-950 border border-slate-800 rounded-lg">
+            <div class="mono font-bold text-teal-400">11/07~09</div>
+            <div class="text-slate-400 mt-1">水戶/つくば (18台)<br>福島大玉 (7台)</div>
+            <div class="text-slate-200 mt-2 font-semibold">計 34 台</div>
+          </div>
+          <div class="p-3 bg-amber-950/20 border border-amber-900/40 rounded-lg">
+            <div class="mono font-bold text-amber-400">11/10~12</div>
+            <div class="text-amber-200/80 mt-1">東京返送集中維修<br>徳島/福岡/愛知</div>
+            <div class="text-amber-300 mt-2 font-semibold">計 58 台</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: 各都縣彙整 -->
+    <section id="view-prefs" class="hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-base text-white">各都道府縣巡檢台數排行榜</h3>
+        <button type="button" onclick="resetMapView()" class="text-xs px-3 py-1.5 bg-slate-800 text-teal-400 rounded-lg">重設日本地圖</button>
+      </div>
+      <div id="prefCards" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+    </section>
+
+    <!-- TAB 3: 站點清單 -->
+    <section id="view-list" class="hidden space-y-4">
+      <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <input type="text" id="searchInput" oninput="renderTable()" placeholder="搜尋營業所、地址、日期..." 
+            class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 w-full sm:w-60">
+          <select id="prefSelect" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300"></select>
+          <select id="groupSelect" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300">
+            <option value="ALL">全部組別</option>
+            <option value="A(3人)">A 組 (3人)</option>
+            <option value="B(3人)">B 組 (3人)</option>
+            <option value="東京返送希望">東京返送希望</option>
+          </select>
+        </div>
+        <div class="text-xs text-slate-400">目前結果：<span id="filteredStats" class="mono font-bold text-teal-400">38 所 / 247 台</span></div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-950 border-b border-slate-800 text-slate-400">
+            <tr>
+              <th class="py-3 px-3 mono">#</th>
+              <th class="py-3 px-3">營業所名</th>
+              <th class="py-3 px-3">都道府縣</th>
+              <th class="py-3 px-3">台數</th>
+              <th class="py-3 px-3">組別</th>
+              <th class="py-3 px-3">預定作業日</th>
+              <th class="py-3 px-3">住所</th>
+              <th class="py-3 px-3 text-right">地圖操作</th>
+            </tr>
+          </thead>
+          <tbody id="stationTableBody" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 4: 東京都專區 -->
+    <section id="view-tokyo" class="hidden space-y-4">
+      <div class="p-4 bg-sky-950/40 border border-sky-800/50 rounded-xl flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-sky-400 text-sm">東京都核心巡檢據點 (#tokyo)</h3>
+          <p class="text-xs text-slate-300">板橋北、港南、足立西保木間、三鷹野崎等共 15 個營業所，總計 129 台。</p>
+        </div>
+        <div class="mono font-bold text-sky-300 text-lg">129 台 (52.2%)</div>
+      </div>
+      <div id="tokyoCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-slate-800 bg-slate-950 py-4 text-center text-xs text-slate-500">
+    YMT 新型充電器全數點檢專案管理系統 ｜ 247台量產前樣機 ｜ 扭力規範：11.2～12.2 kgf·cm
+  </footer>
+
+  <script>
+    const stations = [
+      {id:1, name:"小岩営業所", pref:"東京都", address:"東京都江戸川区南小岩1丁目1-17", units:1, group:"A(3人)", date:"2026-11-08", time:"PM 14時～", lat:35.7275, lng:139.8885},
+      {id:2, name:"高松上林営業所", pref:"香川県", address:"香川県高松市上林町字竹部77", units:2, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.3012, lng:134.0722},
+      {id:3, name:"港天王洲営業所", pref:"東京都", address:"東京都港区港南5-3-27", units:10, group:"A(3人)", date:"2026-11-04", time:"AM 9時～", lat:35.6200, lng:139.7520},
+      {id:4, name:"港南営業所", pref:"東京都", address:"東京都港区港南2-13-26", units:15, group:"A(3人)", date:"2026-11-04", time:"PM 14時～", lat:35.6255, lng:139.7485},
+      {id:5, name:"板橋北営業所", pref:"東京都", address:"東京都板橋区舟渡4-3-1", units:20, group:"B(3人)", date:"2026-11-03", time:"AM 9時～", lat:35.7925, lng:139.6845},
+      {id:6, name:"ひたちなか営業所", pref:"茨城県", address:"茨城県ひたちなか市高場1608-81", units:2, group:"A(3人)", date:"2026-11-07", time:"PM 16:30～", lat:36.4150, lng:140.5420},
+      {id:7, name:"広島観音営業所", pref:"広島県", address:"広島県広島市西区観音新町4丁目10-101", units:2, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.3725, lng:132.4285},
+      {id:8, name:"東青梅営業所", pref:"東京都", address:"東京都青梅市東青梅5丁目22-3", units:1, group:"A(3人)", date:"2026-11-09", time:"AM 9時～", lat:35.7920, lng:139.2785},
+      {id:9, name:"足立新田営業所", pref:"東京都", address:"東京都足立区新田1-9-1", units:11, group:"A(3人)", date:"2026-11-03", time:"PM 14時～", lat:35.7625, lng:139.7285},
+      {id:10, name:"三鷹野崎営業所", pref:"東京都", address:"東京都三鷹市野崎3-21-17", units:10, group:"B(3人)", date:"2026-11-04", time:"AM 9時～", lat:35.6825, lng:139.5425},
+      {id:11, name:"広島観音営業所(追加)", pref:"広島県", address:"広島県広島市西区観音新町4丁目10-101", units:1, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.3725, lng:132.4285},
+      {id:12, name:"豊田若園営業所", pref:"愛知県", address:"愛知県豊田市堤町寺池上63-3", units:3, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:35.0350, lng:137.0980},
+      {id:13, name:"中央林間営業所", pref:"神奈川県", address:"神奈川県大和市中央林間西3-7-1", units:6, group:"B(3人)", date:"2026-11-06", time:"AM 9時～", lat:35.5125, lng:139.4420},
+      {id:14, name:"呉中央営業所", pref:"広島県", address:"広島県呉市光町6-32", units:1, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.2380, lng:132.5520},
+      {id:15, name:"若葉台営業所", pref:"東京都", address:"東京都稲城市坂浜1493-1", units:3, group:"B(3人)", date:"2026-11-05", time:"AM 9時～", lat:35.6150, lng:139.4785},
+      {id:16, name:"つくば平塚営業所", pref:"茨城県", address:"茨城県つくば市東平塚1140-1", units:4, group:"B(3人)", date:"2026-11-08", time:"AM 9時～", lat:36.1050, lng:140.1085},
+      {id:17, name:"水戸平須営業所", pref:"茨城県", address:"茨城県水戸市平須町234-26", units:4, group:"A(3人)", date:"2026-11-07", time:"PM 15時～", lat:36.3325, lng:140.4350},
+      {id:18, name:"東久留米南町", pref:"東京都", address:"東京都東久留米市南町3-10-15", units:5, group:"B(3人)", date:"2026-11-05", time:"PM 14時～", lat:35.7480, lng:139.5250},
+      {id:19, name:"杉並南荻窪営業所", pref:"東京都", address:"東京都杉並区南荻窪3-31-30", units:5, group:"B(3人)", date:"2026-11-03", time:"PM 15:30～", lat:35.7010, lng:139.6120},
+      {id:20, name:"燕営業所", pref:"新潟県", address:"新潟県燕市小関1143-1", units:4, group:"A(3人)", date:"2026-11-05", time:"PM 15:30～", lat:37.6680, lng:138.9250},
+      {id:21, name:"水戸見川営業所", pref:"茨城県", address:"茨城県水戸市見川町2131-1895", units:3, group:"A(3人)", date:"2026-11-07", time:"PM 14時～", lat:36.3680, lng:140.4380},
+      {id:22, name:"港有明営業所", pref:"東京都", address:"東京都江東区有明3-15-13", units:4, group:"A(3人)", date:"2026-11-08", time:"AM 9時～", lat:35.6320, lng:139.7920},
+      {id:23, name:"水戸東原営業所", pref:"茨城県", address:"茨城県水戸市東原2-10-37", units:5, group:"A(3人)", date:"2026-11-07", time:"AM 9時～", lat:36.3850, lng:140.4520},
+      {id:24, name:"成城営業所", pref:"東京都", address:"東京都世田谷区成城1丁目4-19", units:3, group:"A(3人)", date:"2026-11-09", time:"PM 14時～", lat:35.6420, lng:139.6050},
+      {id:25, name:"大和郡山営業所", pref:"奈良県", address:"奈良県大和郡山市豊浦町123-1", units:1, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.6450, lng:135.7820},
+      {id:26, name:"東浦和営業所", pref:"埼玉県", address:"埼玉県さいたま市緑区大字間宮字中622-1", units:8, group:"A(3人)", date:"2026-11-06", time:"AM 9時～", lat:35.8750, lng:139.6920},
+      {id:27, name:"長岡宮原営業所", pref:"新潟県", address:"新潟県長岡市宮原2丁目195-1", units:20, group:"A(3人)", date:"2026-11-05", time:"AM 9時～", lat:37.4350, lng:138.8520},
+      {id:28, name:"港北綱島営業所", pref:"神奈川県", address:"神奈川県横浜市港北区新羽町2618-1", units:8, group:"B(3人)", date:"2026-11-06", time:"PM 14時～", lat:35.5350, lng:139.6150},
+      {id:29, name:"瑞穂明前営業所", pref:"愛知県", address:"愛知県名古屋市瑞穂区明前町10-39", units:6, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:35.1180, lng:136.9250},
+      {id:30, name:"徳島城東営業所", pref:"徳島県", address:"徳島県徳島市城東町1丁目194", units:9, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.0720, lng:134.5680},
+      {id:31, name:"白藤営業所", pref:"熊本県", address:"熊本県熊本市西区上代4丁目12-26", units:6, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:32.7750, lng:130.6720},
+      {id:32, name:"国立府中営業所", pref:"東京都", address:"東京都府中市四谷5-23-62 DPL国立府中1階", units:10, group:"B(3人)", date:"2026-11-04", time:"PM 14時～", lat:35.6650, lng:139.4420},
+      {id:33, name:"大野城営業所", pref:"福岡県", address:"福岡県大野城市乙金東3-5-30", units:7, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:33.5350, lng:130.4950},
+      {id:34, name:"福岡粕屋営業所", pref:"福岡県", address:"福岡県福岡市東区二又瀬新町8-45", units:4, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:33.6150, lng:130.4480},
+      {id:35, name:"足立西保木間営業所", pref:"東京都", address:"東京都足立区西保木間3-7-1", units:15, group:"A(3人)", date:"2026-11-03", time:"AM 9時～", lat:35.7980, lng:139.8050},
+      {id:36, name:"福島大玉営業所", pref:"福島県", address:"福島県安達郡大玉村大山字向原79-1", units:7, group:"B(3人)", date:"2026-11-07", time:"AM 10:30～", lat:37.5520, lng:140.3750},
+      {id:37, name:"緑中山営業所", pref:"神奈川県", address:"神奈川県横浜市緑区上山1丁目15-1", units:5, group:"B(3人)", date:"2026-11-06", time:"PM 14時～", lat:35.5150, lng:139.5380},
+      {id:38, name:"ＧＭ推進課 (銀座)", pref:"東京都", address:"ヤマト銀座本社作業", units:16, group:"A(3人)", date:"11/10～11/12", time:"AM 9時～17時", lat:35.6710, lng:139.7650}
+    ];
+
+    let map = null;
+    let markers = [];
+
+    function navigate(tab) {
+      ['overview','prefs','list','tokyo'].forEach(t => {
+        const el = document.getElementById('view-' + t);
+        if (el) el.classList.toggle('hidden', t !== tab);
+      });
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        b.className = 'nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition';
+      });
+      const active = document.getElementById('nav-' + tab);
+      if (active) active.className = 'nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-teal-600 transition';
+
+      if (tab === 'tokyo') zoomTo('tokyo');
+      else if (tab === 'overview' || tab === 'prefs') resetMapView();
+
+      if (map) {
+        setTimeout(() => map.invalidateSize(), 100);
+      }
+      if (window.location.hash !== '#' + tab) history.pushState(null, null, '#' + tab);
+    }
+
+    function initMap() {
+      if (typeof L === 'undefined') return;
+      try {
+        map = L.map('map', {
+          center: [36.2, 137.8],
+          zoom: 5,
+          scrollWheelZoom: true
+        });
+
+        // 使用全球穩定、免 Key 的 ESRI 日本路網圖資
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+          maxZoom: 18,
+          attribution: '&copy; Esri &mdash; YMT Project'
+        }).addTo(map);
+
+        stations.forEach(s => {
+          const bg = s.group.includes('A') ? '#0d9488' : s.group.includes('B') ? '#4f46e5' : '#d97706';
+          const icon = L.divIcon({
+            html: `<div class="custom-pin" style="background:${bg};width:${s.units > 10 ? 30 : 24}px;height:${s.units > 10 ? 30 : 24}px;">${s.units}</div>`,
+            iconSize: [s.units > 10 ? 30 : 24, s.units > 10 ? 30 : 24],
+            iconAnchor: [(s.units > 10 ? 30 : 24)/2, (s.units > 10 ? 30 : 24)/2]
+          });
+          const m = L.marker([s.lat, s.lng], { icon: icon }).addTo(map);
+          m.bindPopup(`
+            <div style="padding:10px;min-width:180px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+                <span style="font-size:10px;color:#94a3b8;font-weight:bold;">#${String(s.id).padStart(2,'0')}</span>
+                <span style="font-size:10px;color:${bg};border:1px solid ${bg}44;padding:1px 4px;border-radius:4px;font-weight:bold;">${s.pref}</span>
+              </div>
+              <div style="font-weight:bold;color:#fff;font-size:13px;">${s.name}</div>
+              <div style="color:#94a3b8;font-size:11px;margin-bottom:6px;">${s.address}</div>
+              <div style="border-top:1px solid #1e293b;padding-top:4px;font-size:11px;">
+                台數: <b style="color:${bg}">${s.units} 台</b> ｜ ${s.group}<br>
+                排程: ${s.date} (${s.time})
+              </div>
+            </div>
+          `);
+          markers.push({ id: s.id, marker: m, data: s });
+        });
+
+        resetMapView();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function resetMapView() {
+      if (map) {
+        map.fitBounds([[32.6, 130.3], [37.8, 140.7]], { padding: [30, 30] });
+        document.getElementById('mapSubtitle').innerText = '(共 38 所 / 247 台)';
+      }
+    }
+
+    function zoomTo(r) {
+      if (!map) return;
+      if (r === 'tokyo') {
+        map.flyTo([35.6895, 139.6917], 10);
+        document.getElementById('mapSubtitle').innerText = '(東京都核心：15 所 / 129 台)';
+      } else if (r === 'kantou') {
+        map.flyTo([35.8, 139.8], 8);
+        document.getElementById('mapSubtitle').innerText = '(關東圈：24 所 / 174 台)';
+      } else if (r === 'west') {
+        map.flyTo([34.5, 134.0], 7);
+        document.getElementById('mapSubtitle').innerText = '(中西日本 / 返送希望區域)';
+      }
+    }
+
+    function locate(id) {
+      const t = markers.find(m => m.id === id);
+      if (t && map) {
+        map.flyTo([t.data.lat, t.data.lng], 13);
+        t.marker.openPopup();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function renderPrefectures() {
+      const pMap = {};
+      stations.forEach(s => {
+        if (!pMap[s.pref]) pMap[s.pref] = { count: 0, list: [] };
+        pMap[s.pref].count += s.units;
+        pMap[s.pref].list.push(s.name);
+      });
+      const sorted = Object.entries(pMap).sort((a,b) => b[1].count - a[1].count);
+
+      document.getElementById('prefSelect').innerHTML = '<option value="ALL">全部都道府縣 (14)</option>' + sorted.map(([p, d]) => `
+        <option value="${p}">${p} (${d.count}台)</option>
+      `).join('');
+
+      document.getElementById('prefCards').innerHTML = sorted.map(([p, d]) => `
+        <div onclick="selectPref('${p}')" class="p-4 bg-slate-900 border border-slate-800 hover:border-teal-500 rounded-xl cursor-pointer transition">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-bold text-white text-sm">${p}</span>
+            <span class="text-[11px] mono text-slate-400">${d.list.length} 所</span>
+          </div>
+          <div class="mono text-2xl font-bold text-teal-400">${d.count} <span class="text-xs font-normal text-slate-400">台</span></div>
+          <div class="mt-2 text-[10px] text-slate-500 truncate">${d.list.join('、')}</div>
+        </div>
+      `).join('');
+    }
+
+    function selectPref(p) {
+      document.getElementById('prefSelect').value = p;
+      navigate('list');
+      renderTable();
+      const st = stations.filter(s => s.pref.includes(p));
+      if (st.length > 0 && map) map.flyTo([st[0].lat, st[0].lng], st.length > 3 ? 9 : 11);
+    }
+
+    function renderTable() {
+      const q = (document.getElementById('searchInput').value || '').toLowerCase();
+      const p = document.getElementById('prefSelect').value;
+      const g = document.getElementById('groupSelect').value;
+
+      const filtered = stations.filter(s => {
+        const matchQ = s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q) || s.date.includes(q);
+        const matchP = (p === 'ALL') || s.pref.includes(p);
+        const matchG = (g === 'ALL') || s.group.includes(g);
+        return matchQ && matchP && matchG;
+      });
+
+      document.getElementById('filteredStats').innerText = `${filtered.length} 所 / ${filtered.reduce((a,b)=>a+b.units,0)} 台`;
+
+      document.getElementById('stationTableBody').innerHTML = filtered.map(s => {
+        const isA = s.group.includes('A');
+        const isB = s.group.includes('B');
+        const badge = isA ? 'text-teal-400 bg-teal-500/10 border-teal-500/30' : isB ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30' : 'text-amber-400 bg-amber-500/10 border-amber-500/30';
+        return `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="py-2.5 px-3 mono text-slate-500">#${String(s.id).padStart(2,'0')}</td>
+            <td class="py-2.5 px-3 font-semibold text-white">${s.name}</td>
+            <td class="py-2.5 px-3">${s.pref}</td>
+            <td class="py-2.5 px-3 mono font-bold text-teal-400">${s.units} <span class="text-[10px] text-slate-400">台</span></td>
+            <td class="py-2.5 px-3"><span class="text-[10px] px-2 py-0.5 rounded border ${badge}">${s.group}</span></td>
+            <td class="py-2.5 px-3 mono text-slate-300">${s.date}</td>
+            <td class="py-2.5 px-3 text-slate-400 truncate max-w-xs" title="${s.address}">${s.address}</td>
+            <td class="py-2.5 px-3 text-right">
+              <button type="button" onclick="locate(${s.id})" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-teal-400 rounded text-xs">📍 定位</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderTokyo() {
+      document.getElementById('tokyoCards').innerHTML = stations.filter(s => s.pref.includes('東京')).map(s => `
+        <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl hover:border-sky-500/50 transition">
+          <div class="flex justify-between text-xs text-slate-500 mb-1">
+            <span class="mono">#${String(s.id).padStart(2,'0')}</span>
+            <span class="text-sky-400">${s.group}</span>
+          </div>
+          <div class="font-bold text-white text-sm">${s.name}</div>
+          <div class="text-xs text-slate-400 truncate mt-1">${s.address}</div>
+          <div class="flex justify-between items-center mt-3 pt-2 border-t border-slate-800 text-xs">
+            <span class="mono text-slate-400">${s.date}</span>
+            <div class="flex items-center gap-2">
+              <span class="mono font-bold text-sky-400">${s.units} 台</span>
+              <button type="button" onclick="locate(${s.id})" class="px-2 py-0.5 bg-slate-800 text-sky-400 rounded hover:bg-slate-700">定位</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function exportCSV() {
+      let csv = "ID,營業所名,都道府縣,住所,台數,組別,預定作業日,時段\n";
+      stations.forEach(s => {
+        csv += `${s.id},"${s.name}","${s.pref}","${s.address}",${s.units},"${s.group}","${s.date}","${s.time}"\n`;
+      });
+      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "YMT_247台點檢清單.csv";
+      a.click();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderPrefectures();
+      renderTable();
+      renderTokyo();
+      navigate(window.location.hash.replace('#','') || 'overview');
+      initMap();
+    });
+
+    window.addEventListener('hashchange', () => {
+      navigate(window.location.hash.replace('#','') || 'overview');
+    });
+  </script>
+</body>
+</html>
