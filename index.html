@@ -29,6 +29,12 @@
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    
+    /* 免 Key 深色濾鏡：將標準 OSM 地圖轉為俐落的深色科技風 */
+    .dark-map .leaflet-tile {
+      filter: brightness(0.65) invert(1) contrast(3) hue-rotate(200deg) saturate(0.25) brightness(0.7);
+    }
+    
     .leaflet-popup-content-wrapper {
       background: #090d16 !important;
       color: #f1f5f9 !important;
@@ -142,8 +148,8 @@
         </div>
       </div>
 
-      <!-- Map Container -->
-      <div id="map" class="w-full h-[400px] sm:h-[460px] bg-slate-950 z-10"></div>
+      <!-- Map Container with Dark Map Class -->
+      <div id="map" class="dark-map w-full h-[400px] sm:h-[460px] bg-slate-950 z-10"></div>
 
       <!-- Map Legend -->
       <div class="px-4 py-2 bg-slate-950/90 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
@@ -367,7 +373,7 @@
       {"id":31,"name":"白藤営業所","pref":"熊本県","postal":"860-0068","address":"熊本県熊本市西区上代4丁目12-26","units":6,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":32.775,"lng":130.672},
       {"id":32,"name":"国立府中営業所","pref":"東京都","postal":"183-0035","address":"東京都府中市四谷5-23-62 DPL国立府中1階","units":10,"group":"B(3人)","date":"2026-11-04","time":"PM 14時～","lat":35.665,"lng":139.442},
       {"id":33,"name":"大野城営業所","pref":"福岡県","postal":"816-0901","address":"福岡県大野城市乙金東3-5-30","units":7,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":33.535,"lng":130.495},
-      {"id":34,"name":"福岡粕屋営業所","pref":"福岡県","postal":"812-0065","address":"福岡県福岡市東区二又瀬新町8-45","units":4,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":33.615,"lng":130.448},
+      {"id":34,"福岡粕屋営業所","pref":"福岡県","postal":"812-0065","address":"福岡県福岡市東区二又瀬新町8-45","units":4,"group":"東京返送希望","date":"11/10～11/12","time":"AM 9時～17時","lat":33.615,"lng":130.448},
       {"id":35,"name":"足立西保木間営業所","pref":"東京都","postal":"121-0812","address":"東京都足立区西保木間3-7-1","units":15,"group":"A(3人)","date":"2026-11-03","time":"AM 9時～","lat":35.798,"lng":139.805},
       {"id":36,"name":"福島大玉営業所","pref":"福島県","postal":"969-1301","address":"福島県安達郡大玉村大山字向原79-1","units":7,"group":"B(3人)","date":"2026-11-07","time":"AM 10:30～","lat":37.552,"lng":140.375},
       {"id":37,"name":"緑中山営業所","pref":"神奈川県","postal":"226-0012","address":"神奈川県横浜市緑区上山1丁目15-1","units":5,"group":"B(3人)","date":"2026-11-06","time":"PM 14時～","lat":35.515,"lng":139.538},
@@ -378,7 +384,12 @@
 
     function initMap() {
       map = L.map('map', { center: [36.5, 138.0], zoom: 6, scrollWheelZoom: true });
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+      
+      // 使用完全免費、免 Key 的 OpenStreetMap 圖資
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(map);
 
       stations.forEach(s => {
         const bg = s.group.includes('A') ? '#14b8a6' : s.group.includes('B') ? '#6366f1' : '#f59e0b';
@@ -425,151 +436,3 @@
     }
 
     function locateStation(id) {
-      const t = markers.find(m => m.id === id);
-      if(t) {
-        map.flyTo([t.data.lat, t.data.lng], 13, { duration: 1 });
-        t.marker.openPopup();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
-
-    function navigate(tab) {
-      ['overview','prefs','list','tokyo'].forEach(t => {
-        const el = document.getElementById('view-' + t);
-        if(el) el.classList.toggle('hidden', t !== tab);
-      });
-      document.querySelectorAll('.nav-tab').forEach(b => {
-        b.className = 'nav-tab px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition';
-      });
-      const active = document.getElementById('nav-' + tab);
-      if(active) active.className = 'nav-tab px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-teal-600 transition';
-
-      if(tab === 'tokyo') zoomToRegion('tokyo');
-      else if(tab === 'overview' || tab === 'prefs') resetMapView();
-
-      if(window.location.hash !== '#' + tab) {
-        history.pushState(null, null, '#' + tab);
-      }
-    }
-
-    function renderPrefectures() {
-      const pMap = {};
-      stations.forEach(s => {
-        const p = s.pref.replace('？','');
-        if(!pMap[p]) pMap[p] = { count: 0, units: [] };
-        pMap[p].count += s.units;
-        pMap[p].units.push(s.name);
-      });
-      const sorted = Object.entries(pMap).sort((a,b) => b[1].count - a[1].count);
-
-      document.getElementById('prefSelect').innerHTML = '<option value="ALL">全部都道府縣 (14)</option>' + sorted.map(([p, data]) => `
-        <option value="${p}">${p} (${data.count}台)</option>
-      `).join('');
-
-      document.getElementById('prefCardsGrid').innerHTML = sorted.map(([p, data]) => `
-        <div onclick="selectPref('${p}')" class="p-4 bg-slate-900 border border-slate-800 hover:border-teal-500 rounded-2xl cursor-pointer transition">
-          <div class="flex justify-between items-center mb-1">
-            <span class="font-bold text-white text-sm">${p}</span>
-            <span class="text-[11px] mono text-slate-400">${data.units.length} 所</span>
-          </div>
-          <div class="mono text-2xl font-bold text-teal-400">${data.count} <span class="text-xs font-normal text-slate-400">台</span></div>
-          <div class="mt-2 text-[10px] text-slate-500 truncate">${data.units.join('、')}</div>
-        </div>
-      `).join('');
-    }
-
-    function selectPref(p) {
-      document.getElementById('prefSelect').value = p;
-      navigate('list');
-      filterAndRenderTable();
-      const st = stations.filter(s => s.pref.includes(p));
-      if(st.length > 0) {
-        map.flyTo([st[0].lat, st[0].lng], st.length > 3 ? 9 : 11);
-      }
-    }
-
-    function filterAndRenderTable() {
-      const q = document.getElementById('searchInput').value.toLowerCase();
-      const p = document.getElementById('prefSelect').value;
-      const g = document.getElementById('groupSelect').value;
-
-      const filtered = stations.filter(s => {
-        const matchQ = s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q) || s.date.includes(q);
-        const matchP = (p === 'ALL') || s.pref.includes(p);
-        const matchG = (g === 'ALL') || s.group.includes(g);
-        return matchQ && matchP && matchG;
-      });
-
-      document.getElementById('filteredStats').innerText = `${filtered.length} 所 / ${filtered.reduce((a,b)=>a+b.units,0)} 台`;
-
-      document.getElementById('stationTableBody').innerHTML = filtered.map(s => {
-        const isA = s.group.includes('A');
-        const isB = s.group.includes('B');
-        const badge = isA ? 'text-teal-400 bg-teal-500/10 border-teal-500/30' : isB ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30' : 'text-amber-400 bg-amber-500/10 border-amber-500/30';
-        return `
-          <tr class="hover:bg-slate-800/40 transition">
-            <td class="py-2.5 px-4 mono text-slate-500">#${String(s.id).padStart(2,'0')}</td>
-            <td class="py-2.5 px-4 font-semibold text-white">${s.name}</td>
-            <td class="py-2.5 px-4">${s.pref}</td>
-            <td class="py-2.5 px-4 mono font-bold text-teal-400">${s.units} <span class="text-[10px] font-normal text-slate-400">台</span></td>
-            <td class="py-2.5 px-4"><span class="text-[11px] px-2 py-0.5 rounded border ${badge}">${s.group}</span></td>
-            <td class="py-2.5 px-4 mono text-slate-300">${s.date}</td>
-            <td class="py-2.5 px-4 text-slate-400">${s.time}</td>
-            <td class="py-2.5 px-4 text-slate-400 truncate max-w-xs" title="${s.address}">${s.address}</td>
-            <td class="py-2.5 px-4 text-right">
-              <button onclick="locateStation(${s.id})" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-teal-400 rounded text-xs transition">📍 定位</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    function renderTokyoCards() {
-      document.getElementById('tokyoCardsGrid').innerHTML = stations.filter(s => s.pref.includes('東京')).map(s => `
-        <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl hover:border-sky-500/50 transition">
-          <div class="flex justify-between text-xs text-slate-500 mb-1">
-            <span class="mono">#${String(s.id).padStart(2,'0')}</span>
-            <span class="text-sky-400">${s.group}</span>
-          </div>
-          <div class="font-bold text-white text-base">${s.name}</div>
-          <div class="text-xs text-slate-400 truncate mt-1">${s.address}</div>
-          <div class="flex justify-between items-center mt-3 pt-2 border-t border-slate-800 text-xs">
-            <span class="mono text-slate-400">${s.date}</span>
-            <div class="flex items-center gap-2">
-              <span class="mono font-bold text-sky-400 text-base">${s.units} 台</span>
-              <button onclick="locateStation(${s.id})" class="px-2 py-1 bg-slate-800 text-sky-400 rounded text-xs hover:bg-slate-700">定位</button>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function exportCSV() {
-      let csv = "ID,營業所名,都道府縣,郵遞區號,住所,台數,組別,預定作業日,時段\n";
-      stations.forEach(s => {
-        csv += `${s.id},"${s.name}","${s.pref}","${s.postal}","${s.address}",${s.units},"${s.group}","${s.date}","${s.time}"\n`;
-      });
-      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "YMT_247台點檢清單.csv";
-      a.click();
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      lucide.createIcons();
-      initMap();
-      renderPrefectures();
-      filterAndRenderTable();
-      renderTokyoCards();
-
-      const hash = window.location.hash.replace('#','') || 'overview';
-      navigate(hash);
-    });
-
-    window.addEventListener('hashchange', () => {
-      navigate(window.location.hash.replace('#','') || 'overview');
-    });
-  </script>
-</body>
-</html>
