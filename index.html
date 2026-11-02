@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YMT 新型充電器全數點檢專案管理 (247台限定)</title>
+  <title>YMT 新型充電器全數點檢專案管理 (247台 / 第一ロット200台)</title>
   
   <!-- Tailwind CSS & Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -13,82 +13,145 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
   
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            morandi: {
+              bg: '#1b1e24',
+              surface: '#242831',
+              card: '#2b313d',
+              border: '#3a4252',
+              sage: '#7e9f8e',      // A組 / 正常完成
+              sageDark: '#5e7d6d',
+              slate: '#7b92a8',     // B組 / 東京核心
+              slateDark: '#5b7186',
+              clay: '#c09983',      // 東京返送希望
+              clayDark: '#9e7964',
+              mauve: '#a394a8',     // 第一ロット 200台
+              sand: '#d5cfc7',
+              textMuted: '#9aa3b2',
+              textMain: '#edf1f5'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #1b1e24;
+      color: #edf1f5;
+    }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    
     #map {
-      height: 480px;
+      height: 460px;
       width: 100%;
-      background: #0f172a;
+      background: #1b1e24;
+      border-radius: 0 0 1rem 1rem;
     }
+    
     .leaflet-popup-content-wrapper {
-      background: #0f172a !important;
-      color: #f1f5f9 !important;
-      border: 1px solid #334155 !important;
-      border-radius: 0.75rem !important;
+      background: #242831 !important;
+      color: #edf1f5 !important;
+      border: 1px solid #3a4252 !important;
+      border-radius: 0.85rem !important;
+      box-shadow: 0 12px 25px -4px rgba(0,0,0,0.5) !important;
     }
-    .leaflet-popup-tip { background: #0f172a !important; }
-    .custom-pin {
+    .leaflet-popup-tip { background: #242831 !important; }
+    
+    .morandi-pin {
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 9999px;
       font-weight: 700;
-      color: white;
+      color: #ffffff;
       font-size: 11px;
-      border: 2px solid #ffffff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+      border: 2px solid rgba(255,255,255,0.85);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
       cursor: pointer;
-      transition: transform 0.2s;
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .custom-pin:hover { transform: scale(1.2); }
+    .morandi-pin:hover {
+      transform: scale(1.22);
+      z-index: 1000 !important;
+    }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col selection:bg-morandi-sage selection:text-white">
 
   <!-- Header -->
-  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50">
+  <header class="border-b border-morandi-border bg-morandi-surface/90 backdrop-blur sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400 font-bold">
+        <div class="w-10 h-10 rounded-xl bg-morandi-sage/20 border border-morandi-sage/40 flex items-center justify-center text-morandi-sage font-bold mono">
           YMT
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="font-bold text-base sm:text-lg text-white">新型充電器全數點檢看板</h1>
-            <span class="text-[11px] px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/30 mono font-semibold">247台限定</span>
+            <h1 class="font-bold text-base sm:text-lg text-morandi-textMain">新型充電器全數點檢巡檢系統</h1>
+            <span id="activeDatasetTag" class="text-[11px] px-2.5 py-0.5 rounded-full bg-morandi-sage/20 text-morandi-sage border border-morandi-sage/30 mono font-semibold">247台樣機</span>
           </div>
-          <p class="text-xs text-slate-400">量產前樣機 (AF0JYT-20AP1系列) 營業所巡檢管理系統</p>
+          <p class="text-xs text-morandi-textMuted">量產前樣機與第一ロット營業所現場作業管制看板</p>
         </div>
+      </div>
+
+      <!-- Dataset Filter Switcher -->
+      <div class="flex items-center bg-morandi-bg p-1 rounded-xl border border-morandi-border text-xs">
+        <button type="button" onclick="setDataset('247')" id="tab-data-247" class="px-3 py-1.5 rounded-lg font-semibold bg-morandi-card text-morandi-sage shadow transition">
+          シート247 のコピー (247台)
+        </button>
+        <button type="button" onclick="setDataset('200')" id="tab-data-200" class="px-3 py-1.5 rounded-lg font-semibold text-morandi-textMuted hover:text-white transition">
+          第一ロット (200台)
+        </button>
+        <button type="button" onclick="setDataset('all')" id="tab-data-all" class="px-3 py-1.5 rounded-lg font-semibold text-morandi-textMuted hover:text-white transition">
+          全部合計 (447台)
+        </button>
       </div>
 
       <!-- Quick Metrics -->
       <div class="flex items-center gap-6 text-xs">
         <div class="text-right">
-          <span class="text-slate-400 block text-[10px]">點檢總台數</span>
-          <span class="mono font-bold text-lg text-teal-400">247 <span class="text-xs text-slate-400 font-normal">台</span></span>
+          <span class="text-morandi-textMuted block text-[10px]">點檢總台數</span>
+          <span id="statTotalUnits" class="mono font-bold text-lg text-morandi-sage">247 <span class="text-xs text-morandi-textMuted font-normal">台</span></span>
         </div>
-        <div class="text-right border-l border-slate-800 pl-6">
-          <span class="text-slate-400 block text-[10px]">巡檢營業所</span>
-          <span class="mono font-bold text-lg text-white">38 <span class="text-xs text-slate-400 font-normal">站</span></span>
+        <div class="text-right border-l border-morandi-border pl-6">
+          <span class="text-morandi-textMuted block text-[10px]">巡檢營業所</span>
+          <span id="statTotalStations" class="mono font-bold text-lg text-morandi-textMain">38 <span class="text-xs text-morandi-textMuted font-normal">站</span></span>
         </div>
-        <div class="text-right border-l border-slate-800 pl-6">
-          <span class="text-slate-400 block text-[10px]">涵蓋區域</span>
-          <span class="mono font-bold text-lg text-indigo-400">14 <span class="text-xs text-slate-400 font-normal">都縣</span></span>
+        <div class="text-right border-l border-morandi-border pl-6 hidden sm:block">
+          <span class="text-morandi-textMuted block text-[10px]">東京都佔比</span>
+          <span id="statTokyoShare" class="mono font-bold text-lg text-morandi-slate">52.2%</span>
         </div>
       </div>
     </div>
 
     <!-- Navigation Tabs -->
-    <div class="border-t border-slate-800/80 bg-slate-900/50 px-4">
+    <div class="border-t border-morandi-border/60 bg-morandi-surface/50 px-4">
       <div class="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto gap-2 py-2">
         <nav class="flex items-center gap-2">
-          <button type="button" onclick="navigate('overview')" id="nav-overview" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-teal-600 transition">全國總覽</button>
-          <button type="button" onclick="navigate('prefs')" id="nav-prefs" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">各都縣彙整</button>
-          <button type="button" onclick="navigate('list')" id="nav-list" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">站點清單</button>
-          <button type="button" onclick="navigate('tokyo')" id="nav-tokyo" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">東京都專區</button>
+          <button type="button" onclick="navigate('overview')" id="nav-overview" class="nav-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-morandi-card border border-morandi-border transition">
+            <i data-lucide="map" class="w-3.5 h-3.5 inline mr-1"></i> 全國總覽
+          </button>
+          <button type="button" onclick="navigate('tokyo')" id="nav-tokyo" class="nav-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-morandi-textMuted hover:text-white hover:bg-morandi-card/50 transition">
+            <i data-lucide="map-pin" class="w-3.5 h-3.5 inline mr-1 text-morandi-slate"></i> 東京都專區 (#tokyo)
+          </button>
+          <button type="button" onclick="navigate('prefs')" id="nav-prefs" class="nav-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-morandi-textMuted hover:text-white hover:bg-morandi-card/50 transition">
+            <i data-lucide="layers" class="w-3.5 h-3.5 inline mr-1"></i> 各都縣彙整
+          </button>
+          <button type="button" onclick="navigate('list')" id="nav-list" class="nav-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-morandi-textMuted hover:text-white hover:bg-morandi-card/50 transition">
+            <i data-lucide="table" class="w-3.5 h-3.5 inline mr-1"></i> 站點清單
+          </button>
         </nav>
-        <button type="button" onclick="exportCSV()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300">匯出 CSV</button>
+        <button type="button" onclick="exportCSV()" class="px-3 py-1.5 bg-morandi-card hover:bg-morandi-surface border border-morandi-border rounded-lg text-xs text-morandi-sand flex items-center gap-1.5 transition">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i> 匯出清單 CSV
+        </button>
       </div>
     </div>
   </header>
@@ -97,282 +160,423 @@
   <main class="max-w-7xl mx-auto px-4 py-6 space-y-6 flex-1 w-full">
 
     <!-- Leaflet Map Card -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-      <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+    <div class="bg-morandi-surface border border-morandi-border rounded-2xl overflow-hidden shadow-2xl">
+      <div class="px-4 py-3 bg-morandi-surface/90 border-b border-morandi-border flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse"></span>
-          <h2 class="font-bold text-sm text-white">日本巡檢地理拓撲圖 <span id="mapSubtitle" class="text-xs font-normal text-slate-400">(共 38 所 / 247 台)</span></h2>
+          <span class="w-2.5 h-2.5 rounded-full bg-morandi-sage animate-pulse"></span>
+          <h2 class="font-bold text-sm text-morandi-textMain">日本巡檢地理分佈圖 <span id="mapSubtitle" class="text-xs font-normal text-morandi-textMuted">(共 38 所 / 247 台)</span></h2>
         </div>
-        <div class="flex items-center gap-2 text-xs">
-          <button type="button" onclick="resetMapView()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">🇯🇵 日本全圖</button>
-          <button type="button" onclick="zoomTo('kantou')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">關東圈 (174台)</button>
-          <button type="button" onclick="zoomTo('tokyo')" class="px-2.5 py-1 bg-sky-900/60 border border-sky-800 hover:bg-sky-800 rounded-lg text-sky-200">東京都 (129台)</button>
-          <button type="button" onclick="zoomTo('west')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">西日本 / 返送</button>
+        <div class="flex items-center gap-1.5 text-xs">
+          <button type="button" onclick="resetMapView()" class="px-2.5 py-1 bg-morandi-card hover:bg-morandi-border rounded-lg text-morandi-sand transition">🇯🇵 日本全域</button>
+          <button type="button" onclick="zoomTo('kantou')" class="px-2.5 py-1 bg-morandi-card hover:bg-morandi-border rounded-lg text-morandi-textMuted hover:text-white transition">關東都會圈</button>
+          <button type="button" onclick="zoomTo('tokyo')" class="px-2.5 py-1 bg-morandi-slate/20 border border-morandi-slate/40 text-morandi-slate hover:bg-morandi-slate/30 rounded-lg transition">東京都核心</button>
+          <button type="button" onclick="zoomTo('west')" class="px-2.5 py-1 bg-morandi-card hover:bg-morandi-border rounded-lg text-morandi-textMuted hover:text-white transition">中西日本 / 返送</button>
         </div>
       </div>
       
-      <!-- Map Container -->
+      <!-- Leaflet Map Container -->
       <div id="map"></div>
       
-      <div class="px-4 py-2 bg-slate-950 border-t border-slate-800 flex items-center gap-6 text-xs text-slate-400">
-        <span class="font-medium text-slate-300">圖例：</span>
-        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-teal-600 inline-block border border-white"></span> A 組 (3人)</span>
-        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-indigo-600 inline-block border border-white"></span> B 組 (3人)</span>
-        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-600 inline-block border border-white"></span> 東京返送希望 (銀座集中)</span>
+      <div class="px-4 py-2.5 bg-morandi-surface border-t border-morandi-border flex flex-wrap items-center justify-between gap-4 text-xs text-morandi-textMuted">
+        <div class="flex items-center gap-5 flex-wrap">
+          <span class="font-medium text-morandi-sand">組別圖例：</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#7e9f8e] inline-block border border-white/80"></span> A 組 (3人現場)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#7b92a8] inline-block border border-white/80"></span> B 組 (3人現場)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#c09983] inline-block border border-white/80"></span> 東京返送希望 (銀座本社集中)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#a394a8] inline-block border border-white/80"></span> 第一批次 200台</span>
+        </div>
+        <div class="text-[11px] text-morandi-sand">
+          💡 點選地圖圓標可直接呼叫 <b>Google Maps 導航</b>
+        </div>
       </div>
     </div>
 
-    <!-- TAB 1: 全國總覽 -->
+    <!-- TAB 1: 全國總覽 (#overview) -->
     <section id="view-overview" class="space-y-6">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-          <div class="text-xs text-slate-400 mb-1">A 組現場巡檢 (18 站)</div>
-          <div class="mono text-2xl font-bold text-teal-400">128 <span class="text-xs font-normal text-slate-400">台 (51.8%)</span></div>
+        <div class="bg-morandi-card border border-morandi-border p-5 rounded-2xl">
+          <div class="text-xs text-morandi-textMuted mb-1 flex items-center justify-between">
+            <span>A 組現場巡檢</span>
+            <span class="px-2 py-0.5 rounded bg-morandi-sage/20 text-morandi-sage text-[10px] font-semibold">現場工程</span>
+          </div>
+          <div id="metricGroupA" class="mono text-2xl font-bold text-morandi-sage">128 <span class="text-xs text-morandi-textMuted font-normal">台</span></div>
+          <p class="text-xs text-morandi-textMuted mt-2">負責東京都主力、茨城、新潟等站點</p>
         </div>
-        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-          <div class="text-xs text-slate-400 mb-1">B 組現場巡檢 (12 站)</div>
-          <div class="mono text-2xl font-bold text-indigo-400">92 <span class="text-xs font-normal text-slate-400">台 (37.2%)</span></div>
+
+        <div class="bg-morandi-card border border-morandi-border p-5 rounded-2xl">
+          <div class="text-xs text-morandi-textMuted mb-1 flex items-center justify-between">
+            <span>B 組現場巡檢</span>
+            <span class="px-2 py-0.5 rounded bg-morandi-slate/20 text-morandi-slate text-[10px] font-semibold">現場工程</span>
+          </div>
+          <div id="metricGroupB" class="mono text-2xl font-bold text-morandi-slate">92 <span class="text-xs text-morandi-textMuted font-normal">台</span></div>
+          <p class="text-xs text-morandi-textMuted mt-2">負責板橋北、三鷹、神奈川、埼玉等站點</p>
         </div>
-        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-          <div class="text-xs text-slate-400 mb-1">東京返送處理 (8 站)</div>
-          <div class="mono text-2xl font-bold text-amber-400">27 <span class="text-xs font-normal text-slate-400">台 (11.0%)</span></div>
+
+        <div class="bg-morandi-card border border-morandi-border p-5 rounded-2xl">
+          <div class="text-xs text-morandi-textMuted mb-1 flex items-center justify-between">
+            <span>東京返送處理</span>
+            <span class="px-2 py-0.5 rounded bg-morandi-clay/20 text-morandi-clay text-[10px] font-semibold">銀座本社</span>
+          </div>
+          <div id="metricGroupRemote" class="mono text-2xl font-bold text-morandi-clay">27 <span class="text-xs text-morandi-textMuted font-normal">台</span></div>
+          <p class="text-xs text-morandi-textMuted mt-2">德島、福岡、廣島、熊本、高松等集中維修</p>
         </div>
-        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-          <div class="text-xs text-slate-400 mb-1">東京都合計 (15 站)</div>
-          <div class="mono text-2xl font-bold text-sky-400">129 <span class="text-xs font-normal text-slate-400">台 (52.2%)</span></div>
+
+        <div class="bg-morandi-card border border-morandi-border p-5 rounded-2xl">
+          <div class="text-xs text-morandi-textMuted mb-1 flex items-center justify-between">
+            <span>東京都合計</span>
+            <span class="px-2 py-0.5 rounded bg-morandi-mauve/20 text-morandi-mauve text-[10px] font-semibold">戰略核心</span>
+          </div>
+          <div id="metricTokyo" class="mono text-2xl font-bold text-morandi-textMain">129 <span class="text-xs text-morandi-textMuted font-normal">台</span></div>
+          <p class="text-xs text-morandi-textMuted mt-2">佔全日本樣機 52.2% 總檢查量能</p>
         </div>
       </div>
 
-      <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl">
-        <h3 class="font-bold text-sm text-white mb-3">排程推進概況 (11/03 ~ 11/12)</h3>
+      <!-- Schedule Progression -->
+      <div class="bg-morandi-card border border-morandi-border p-5 rounded-2xl">
+        <h3 class="font-bold text-sm text-morandi-textMain mb-4 flex items-center gap-2">
+          <i data-lucide="calendar" class="w-4 h-4 text-morandi-sage"></i>
+          點檢巡檢時程推進規劃 (11/03 ~ 11/12)
+        </h3>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs">
-          <div class="p-3 bg-slate-950 border border-slate-800 rounded-lg">
-            <div class="mono font-bold text-teal-400">11/03 (二)</div>
-            <div class="text-slate-400 mt-1">板橋北 (20台)<br>足立新田 (11台)</div>
-            <div class="text-slate-200 mt-2 font-semibold">計 51 台</div>
+          <div class="p-3 bg-morandi-surface border border-morandi-border rounded-xl">
+            <div class="mono font-bold text-morandi-sage text-sm">11/03 (二)</div>
+            <div class="text-morandi-textMuted mt-1">板橋北 (20台)<br>足立新田 (11台)</div>
+            <div class="mono font-semibold text-morandi-sand mt-2 pt-1 border-t border-morandi-border">51 台</div>
           </div>
-          <div class="p-3 bg-slate-950 border border-slate-800 rounded-lg">
-            <div class="mono font-bold text-teal-400">11/04 (三)</div>
-            <div class="text-slate-400 mt-1">港南 (15台)<br>港天王洲 (10台)</div>
-            <div class="text-slate-200 mt-2 font-semibold">計 45 台</div>
+          <div class="p-3 bg-morandi-surface border border-morandi-border rounded-xl">
+            <div class="mono font-bold text-morandi-sage text-sm">11/04 (三)</div>
+            <div class="text-morandi-textMuted mt-1">港南 (15台)<br>港天王洲 (10台)</div>
+            <div class="mono font-semibold text-morandi-sand mt-2 pt-1 border-t border-morandi-border">45 台</div>
           </div>
-          <div class="p-3 bg-slate-950 border border-slate-800 rounded-lg">
-            <div class="mono font-bold text-teal-400">11/05 (四)</div>
-            <div class="text-slate-400 mt-1">長岡宮原 (20台)<br>燕 (4台)</div>
-            <div class="text-slate-200 mt-2 font-semibold">計 32 台</div>
+          <div class="p-3 bg-morandi-surface border border-morandi-border rounded-xl">
+            <div class="mono font-bold text-morandi-sage text-sm">11/05 (四)</div>
+            <div class="text-morandi-textMuted mt-1">長岡宮原 (20台)<br>燕 (4台)</div>
+            <div class="mono font-semibold text-morandi-sand mt-2 pt-1 border-t border-morandi-border">32 台</div>
           </div>
-          <div class="p-3 bg-slate-950 border border-slate-800 rounded-lg">
-            <div class="mono font-bold text-teal-400">11/06 (五)</div>
-            <div class="text-slate-400 mt-1">東浦和 (8台)<br>中央林間 (6台)</div>
-            <div class="text-slate-200 mt-2 font-semibold">計 27 台</div>
+          <div class="p-3 bg-morandi-surface border border-morandi-border rounded-xl">
+            <div class="mono font-bold text-morandi-sage text-sm">11/06 (五)</div>
+            <div class="text-morandi-textMuted mt-1">東浦和 (8台)<br>中央林間 (6台)</div>
+            <div class="mono font-semibold text-morandi-sand mt-2 pt-1 border-t border-morandi-border">27 台</div>
           </div>
-          <div class="p-3 bg-slate-950 border border-slate-800 rounded-lg">
-            <div class="mono font-bold text-teal-400">11/07~09</div>
-            <div class="text-slate-400 mt-1">水戶/つくば (18台)<br>福島大玉 (7台)</div>
-            <div class="text-slate-200 mt-2 font-semibold">計 34 台</div>
+          <div class="p-3 bg-morandi-surface border border-morandi-border rounded-xl">
+            <div class="mono font-bold text-morandi-sage text-sm">11/07~09</div>
+            <div class="text-morandi-textMuted mt-1">水戶/つくば (18台)<br>福島大玉 (7台)</div>
+            <div class="mono font-semibold text-morandi-sand mt-2 pt-1 border-t border-morandi-border">34 台</div>
           </div>
-          <div class="p-3 bg-amber-950/20 border border-amber-900/40 rounded-lg">
-            <div class="mono font-bold text-amber-400">11/10~12</div>
-            <div class="text-amber-200/80 mt-1">東京返送集中維修<br>徳島/福岡/愛知</div>
-            <div class="text-amber-300 mt-2 font-semibold">計 58 台</div>
+          <div class="p-3 bg-morandi-clay/10 border border-morandi-clay/30 rounded-xl">
+            <div class="mono font-bold text-morandi-clay text-sm">11/10~12</div>
+            <div class="text-morandi-clay/90 mt-1">東京返送集中作業<br>徳島/福岡/愛知</div>
+            <div class="mono font-semibold text-morandi-clay mt-2 pt-1 border-t border-morandi-clay/30">58 台</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- TAB 2: 各都縣彙整 -->
+    <!-- TAB 2: 東京都專區 (#tokyo) -->
+    <section id="view-tokyo" class="hidden space-y-6">
+      <div class="p-5 rounded-2xl bg-morandi-slate/15 border border-morandi-slate/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 text-morandi-slate font-bold text-base mb-1">
+            <i data-lucide="map-pin" class="w-5 h-5"></i> 東京都重點巡檢區域 (#tokyo)
+          </div>
+          <p class="text-xs text-morandi-textMuted leading-relaxed">
+            比照 Derrick 專案排程佈局，包含板橋北 (20台)、港南 (15台)、足立西保木間 (15台)、足立新田 (11台)、港天王洲 (10台)、三鷹野崎 (10台) 等站點。配備一鍵直連 Google Maps 導航功能。
+          </p>
+        </div>
+        <div class="flex gap-4 shrink-0">
+          <div class="px-4 py-2 bg-morandi-surface rounded-xl border border-morandi-border text-center">
+            <div class="text-[10px] text-morandi-textMuted">東京都台數</div>
+            <div class="mono font-bold text-morandi-slate text-xl">129 <span class="text-xs font-normal">台</span></div>
+          </div>
+          <div class="px-4 py-2 bg-morandi-surface rounded-xl border border-morandi-border text-center">
+            <div class="text-[10px] text-morandi-textMuted">扭力規範</div>
+            <div class="mono font-bold text-morandi-sage text-xl">11.2~12.2</div>
+            <div class="text-[9px] text-morandi-textMuted">kgf·cm</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tokyo Cards Grid (Grouped by Schedule & Station) -->
+      <div id="tokyoCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- TAB 3: 各都縣彙整 (#prefs) -->
     <section id="view-prefs" class="hidden space-y-6">
       <div class="flex items-center justify-between">
-        <h3 class="font-bold text-base text-white">各都道府縣巡檢台數排行榜</h3>
-        <button type="button" onclick="resetMapView()" class="text-xs px-3 py-1.5 bg-slate-800 text-teal-400 rounded-lg">重設日本地圖</button>
+        <div>
+          <h3 class="font-bold text-base text-morandi-textMain">各都道府縣巡檢台數排行榜</h3>
+          <p class="text-xs text-morandi-textMuted">點選任一都縣卡片，地圖將自動平移縮放至該區域並切換該縣清單</p>
+        </div>
+        <button type="button" onclick="resetMapView()" class="text-xs px-3 py-1.5 bg-morandi-card hover:bg-morandi-border text-morandi-sage rounded-lg transition">重設全日本地圖</button>
       </div>
-      <div id="prefCards" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+      <div id="prefCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
     </section>
 
-    <!-- TAB 3: 站點清單 -->
+    <!-- TAB 4: 站點清單 (#list) -->
     <section id="view-list" class="hidden space-y-4">
-      <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex flex-wrap items-center justify-between gap-3">
+      <div class="bg-morandi-surface border border-morandi-border p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
         <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-          <input type="text" id="searchInput" oninput="renderTable()" placeholder="搜尋營業所、地址、日期..." 
-            class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 w-full sm:w-60">
-          <select id="prefSelect" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300"></select>
-          <select id="groupSelect" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300">
+          <div class="relative w-full sm:w-64">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-morandi-textMuted"></i>
+            <input type="text" id="searchInput" oninput="renderTable()" placeholder="搜尋營業所、地址、日期..." 
+              class="w-full bg-morandi-card border border-morandi-border rounded-xl pl-9 pr-3 py-1.5 text-xs text-morandi-textMain placeholder-morandi-textMuted focus:outline-none focus:border-morandi-sage">
+          </div>
+          <select id="prefSelect" onchange="renderTable()" class="bg-morandi-card border border-morandi-border rounded-xl px-3 py-1.5 text-xs text-morandi-sand focus:outline-none"></select>
+          <select id="groupSelect" onchange="renderTable()" class="bg-morandi-card border border-morandi-border rounded-xl px-3 py-1.5 text-xs text-morandi-sand focus:outline-none">
             <option value="ALL">全部組別</option>
             <option value="A(3人)">A 組 (3人)</option>
             <option value="B(3人)">B 組 (3人)</option>
             <option value="東京返送希望">東京返送希望</option>
+            <option value="第一ロット">第一ロット 200台</option>
           </select>
         </div>
-        <div class="text-xs text-slate-400">目前結果：<span id="filteredStats" class="mono font-bold text-teal-400">38 所 / 247 台</span></div>
-      </div>
-
-      <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-slate-950 border-b border-slate-800 text-slate-400">
-            <tr>
-              <th class="py-3 px-3 mono">#</th>
-              <th class="py-3 px-3">營業所名</th>
-              <th class="py-3 px-3">都道府縣</th>
-              <th class="py-3 px-3">台數</th>
-              <th class="py-3 px-3">組別</th>
-              <th class="py-3 px-3">預定作業日</th>
-              <th class="py-3 px-3">住所</th>
-              <th class="py-3 px-3 text-right">地圖操作</th>
-            </tr>
-          </thead>
-          <tbody id="stationTableBody" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- TAB 4: 東京都專區 -->
-    <section id="view-tokyo" class="hidden space-y-4">
-      <div class="p-4 bg-sky-950/40 border border-sky-800/50 rounded-xl flex items-center justify-between">
-        <div>
-          <h3 class="font-bold text-sky-400 text-sm">東京都核心巡檢據點 (#tokyo)</h3>
-          <p class="text-xs text-slate-300">板橋北、港南、足立西保木間、三鷹野崎等共 15 個營業所，總計 129 台。</p>
+        <div class="text-xs text-morandi-textMuted">
+          篩選結果：<span id="filteredStats" class="mono font-bold text-morandi-sage">38 所 / 247 台</span>
         </div>
-        <div class="mono font-bold text-sky-300 text-lg">129 台 (52.2%)</div>
       </div>
-      <div id="tokyoCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+      <div class="bg-morandi-surface border border-morandi-border rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-morandi-card/80 border-b border-morandi-border text-morandi-textMuted">
+              <tr>
+                <th class="py-3 px-4 mono">#</th>
+                <th class="py-3 px-4">營業所名</th>
+                <th class="py-3 px-4">都道府縣</th>
+                <th class="py-3 px-4">台數</th>
+                <th class="py-3 px-4">組別</th>
+                <th class="py-3 px-4">作業日</th>
+                <th class="py-3 px-4">時段</th>
+                <th class="py-3 px-4">住所</th>
+                <th class="py-3 px-4 text-right">定位 / 導航</th>
+              </tr>
+            </thead>
+            <tbody id="stationTableBody" class="divide-y divide-morandi-border/60 text-morandi-textMain"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
   </main>
 
-  <footer class="border-t border-slate-800 bg-slate-950 py-4 text-center text-xs text-slate-500">
-    YMT 新型充電器全數點檢專案管理系統 ｜ 247台量產前樣機 ｜ 扭力規範：11.2～12.2 kgf·cm
+  <!-- Footer -->
+  <footer class="border-t border-morandi-border bg-morandi-surface py-5 text-center text-xs text-morandi-textMuted">
+    <div class="max-w-7xl mx-auto px-4 space-y-1">
+      <p>YMT 新型充電器全數點檢專案管理看板 ｜ 莫蘭迪柔和視覺規範 ｜ 資料版本：20261101_更新-A1</p>
+      <p>標準鎖付扭力規範：11.2～12.2 kgf·cm ｜ 內線剝皮長度：30～35 mm ｜ 扭力計 CAL-006 (KILEWS KTM-15)</p>
+    </div>
   </footer>
 
+  <!-- Script Logic -->
   <script>
-    const stations = [
-      {id:1, name:"小岩営業所", pref:"東京都", address:"東京都江戸川区南小岩1丁目1-17", units:1, group:"A(3人)", date:"2026-11-08", time:"PM 14時～", lat:35.7275, lng:139.8885},
-      {id:2, name:"高松上林営業所", pref:"香川県", address:"香川県高松市上林町字竹部77", units:2, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.3012, lng:134.0722},
-      {id:3, name:"港天王洲営業所", pref:"東京都", address:"東京都港区港南5-3-27", units:10, group:"A(3人)", date:"2026-11-04", time:"AM 9時～", lat:35.6200, lng:139.7520},
-      {id:4, name:"港南営業所", pref:"東京都", address:"東京都港区港南2-13-26", units:15, group:"A(3人)", date:"2026-11-04", time:"PM 14時～", lat:35.6255, lng:139.7485},
-      {id:5, name:"板橋北営業所", pref:"東京都", address:"東京都板橋区舟渡4-3-1", units:20, group:"B(3人)", date:"2026-11-03", time:"AM 9時～", lat:35.7925, lng:139.6845},
-      {id:6, name:"ひたちなか営業所", pref:"茨城県", address:"茨城県ひたちなか市高場1608-81", units:2, group:"A(3人)", date:"2026-11-07", time:"PM 16:30～", lat:36.4150, lng:140.5420},
-      {id:7, name:"広島観音営業所", pref:"広島県", address:"広島県広島市西区観音新町4丁目10-101", units:2, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.3725, lng:132.4285},
-      {id:8, name:"東青梅営業所", pref:"東京都", address:"東京都青梅市東青梅5丁目22-3", units:1, group:"A(3人)", date:"2026-11-09", time:"AM 9時～", lat:35.7920, lng:139.2785},
-      {id:9, name:"足立新田営業所", pref:"東京都", address:"東京都足立区新田1-9-1", units:11, group:"A(3人)", date:"2026-11-03", time:"PM 14時～", lat:35.7625, lng:139.7285},
-      {id:10, name:"三鷹野崎営業所", pref:"東京都", address:"東京都三鷹市野崎3-21-17", units:10, group:"B(3人)", date:"2026-11-04", time:"AM 9時～", lat:35.6825, lng:139.5425},
-      {id:11, name:"広島観音営業所(追加)", pref:"広島県", address:"広島県広島市西区観音新町4丁目10-101", units:1, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.3725, lng:132.4285},
-      {id:12, name:"豊田若園営業所", pref:"愛知県", address:"愛知県豊田市堤町寺池上63-3", units:3, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:35.0350, lng:137.0980},
-      {id:13, name:"中央林間営業所", pref:"神奈川県", address:"神奈川県大和市中央林間西3-7-1", units:6, group:"B(3人)", date:"2026-11-06", time:"AM 9時～", lat:35.5125, lng:139.4420},
-      {id:14, name:"呉中央営業所", pref:"広島県", address:"広島県呉市光町6-32", units:1, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.2380, lng:132.5520},
-      {id:15, name:"若葉台営業所", pref:"東京都", address:"東京都稲城市坂浜1493-1", units:3, group:"B(3人)", date:"2026-11-05", time:"AM 9時～", lat:35.6150, lng:139.4785},
-      {id:16, name:"つくば平塚営業所", pref:"茨城県", address:"茨城県つくば市東平塚1140-1", units:4, group:"B(3人)", date:"2026-11-08", time:"AM 9時～", lat:36.1050, lng:140.1085},
-      {id:17, name:"水戸平須営業所", pref:"茨城県", address:"茨城県水戸市平須町234-26", units:4, group:"A(3人)", date:"2026-11-07", time:"PM 15時～", lat:36.3325, lng:140.4350},
-      {id:18, name:"東久留米南町", pref:"東京都", address:"東京都東久留米市南町3-10-15", units:5, group:"B(3人)", date:"2026-11-05", time:"PM 14時～", lat:35.7480, lng:139.5250},
-      {id:19, name:"杉並南荻窪営業所", pref:"東京都", address:"東京都杉並区南荻窪3-31-30", units:5, group:"B(3人)", date:"2026-11-03", time:"PM 15:30～", lat:35.7010, lng:139.6120},
-      {id:20, name:"燕営業所", pref:"新潟県", address:"新潟県燕市小関1143-1", units:4, group:"A(3人)", date:"2026-11-05", time:"PM 15:30～", lat:37.6680, lng:138.9250},
-      {id:21, name:"水戸見川営業所", pref:"茨城県", address:"茨城県水戸市見川町2131-1895", units:3, group:"A(3人)", date:"2026-11-07", time:"PM 14時～", lat:36.3680, lng:140.4380},
-      {id:22, name:"港有明営業所", pref:"東京都", address:"東京都江東区有明3-15-13", units:4, group:"A(3人)", date:"2026-11-08", time:"AM 9時～", lat:35.6320, lng:139.7920},
-      {id:23, name:"水戸東原営業所", pref:"茨城県", address:"茨城県水戸市東原2-10-37", units:5, group:"A(3人)", date:"2026-11-07", time:"AM 9時～", lat:36.3850, lng:140.4520},
-      {id:24, name:"成城営業所", pref:"東京都", address:"東京都世田谷区成城1丁目4-19", units:3, group:"A(3人)", date:"2026-11-09", time:"PM 14時～", lat:35.6420, lng:139.6050},
-      {id:25, name:"大和郡山営業所", pref:"奈良県", address:"奈良県大和郡山市豊浦町123-1", units:1, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.6450, lng:135.7820},
-      {id:26, name:"東浦和営業所", pref:"埼玉県", address:"埼玉県さいたま市緑区大字間宮字中622-1", units:8, group:"A(3人)", date:"2026-11-06", time:"AM 9時～", lat:35.8750, lng:139.6920},
-      {id:27, name:"長岡宮原営業所", pref:"新潟県", address:"新潟県長岡市宮原2丁目195-1", units:20, group:"A(3人)", date:"2026-11-05", time:"AM 9時～", lat:37.4350, lng:138.8520},
-      {id:28, name:"港北綱島営業所", pref:"神奈川県", address:"神奈川県横浜市港北区新羽町2618-1", units:8, group:"B(3人)", date:"2026-11-06", time:"PM 14時～", lat:35.5350, lng:139.6150},
-      {id:29, name:"瑞穂明前営業所", pref:"愛知県", address:"愛知県名古屋市瑞穂区明前町10-39", units:6, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:35.1180, lng:136.9250},
-      {id:30, name:"徳島城東営業所", pref:"徳島県", address:"徳島県徳島市城東町1丁目194", units:9, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.0720, lng:134.5680},
-      {id:31, name:"白藤営業所", pref:"熊本県", address:"熊本県熊本市西区上代4丁目12-26", units:6, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:32.7750, lng:130.6720},
-      {id:32, name:"国立府中営業所", pref:"東京都", address:"東京都府中市四谷5-23-62 DPL国立府中1階", units:10, group:"B(3人)", date:"2026-11-04", time:"PM 14時～", lat:35.6650, lng:139.4420},
-      {id:33, name:"大野城営業所", pref:"福岡県", address:"福岡県大野城市乙金東3-5-30", units:7, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:33.5350, lng:130.4950},
-      {id:34, name:"福岡粕屋営業所", pref:"福岡県", address:"福岡県福岡市東区二又瀬新町8-45", units:4, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:33.6150, lng:130.4480},
-      {id:35, name:"足立西保木間営業所", pref:"東京都", address:"東京都足立区西保木間3-7-1", units:15, group:"A(3人)", date:"2026-11-03", time:"AM 9時～", lat:35.7980, lng:139.8050},
-      {id:36, name:"福島大玉営業所", pref:"福島県", address:"福島県安達郡大玉村大山字向原79-1", units:7, group:"B(3人)", date:"2026-11-07", time:"AM 10:30～", lat:37.5520, lng:140.3750},
-      {id:37, name:"緑中山営業所", pref:"神奈川県", address:"神奈川県横浜市緑区上山1丁目15-1", units:5, group:"B(3人)", date:"2026-11-06", time:"PM 14時～", lat:35.5150, lng:139.5380},
-      {id:38, name:"ＧＭ推進課 (銀座)", pref:"東京都", address:"ヤマト銀座本社作業", units:16, group:"A(3人)", date:"11/10～11/12", time:"AM 9時～17時", lat:35.6710, lng:139.7650}
+    // 1. 資料庫：シート247 のコピー (247台樣機 - 38站)
+    const dataset247 = [
+      {id:1, name:"小岩営業所", pref:"東京都", address:"東京都江戸川区南小岩1丁目1-17", units:1, group:"A(3人)", date:"2026-11-08", time:"PM 14時～", lat:35.7275, lng:139.8885, batch:"247"},
+      {id:2, name:"高松上林営業所", pref:"香川県", address:"香川県高松市上林町字竹部77", units:2, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.3012, lng:134.0722, batch:"247"},
+      {id:3, name:"港天王洲営業所", pref:"東京都", address:"東京都港区港南5-3-27", units:10, group:"A(3人)", date:"2026-11-04", time:"AM 9時～", lat:35.6200, lng:139.7520, batch:"247"},
+      {id:4, name:"港南営業所", pref:"東京都", address:"東京都港区港南2-13-26", units:15, group:"A(3人)", date:"2026-11-04", time:"PM 14時～", lat:35.6255, lng:139.7485, batch:"247"},
+      {id:5, name:"板橋北営業所", pref:"東京都", address:"東京都板橋区舟渡4-3-1", units:20, group:"B(3人)", date:"2026-11-03", time:"AM 9時～", lat:35.7925, lng:139.6845, batch:"247"},
+      {id:6, name:"ひたちなか営業所", pref:"茨城県", address:"茨城県ひたちなか市高場1608-81", units:2, group:"A(3人)", date:"2026-11-07", time:"PM 16:30～", lat:36.4150, lng:140.5420, batch:"247"},
+      {id:7, name:"広島観音営業所", pref:"広島県", address:"広島県広島市西区観音新町4丁目10-101", units:2, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.3725, lng:132.4285, batch:"247"},
+      {id:8, name:"東青梅営業所", pref:"東京都", address:"東京都青梅市東青梅5丁目22-3", units:1, group:"A(3人)", date:"2026-11-09", time:"AM 9時～", lat:35.7920, lng:139.2785, batch:"247"},
+      {id:9, name:"足立新田営業所", pref:"東京都", address:"東京都足立区新田1-9-1", units:11, group:"A(3人)", date:"2026-11-03", time:"PM 14時～", lat:35.7625, lng:139.7285, batch:"247"},
+      {id:10, name:"三鷹野崎営業所", pref:"東京都", address:"東京都三鷹市野崎3-21-17", units:10, group:"B(3人)", date:"2026-11-04", time:"AM 9時～", lat:35.6825, lng:139.5425, batch:"247"},
+      {id:11, name:"広島観音営業所(追加)", pref:"広島県", address:"広島県広島市西区観音新町4丁目10-101", units:1, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.3725, lng:132.4285, batch:"247"},
+      {id:12, name:"豊田若園営業所", pref:"愛知県", address:"愛知県豊田市堤町寺池上63-3", units:3, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:35.0350, lng:137.0980, batch:"247"},
+      {id:13, name:"中央林間営業所", pref:"神奈川県", address:"神奈川県大和市中央林間西3-7-1", units:6, group:"B(3人)", date:"2026-11-06", time:"AM 9時～", lat:35.5125, lng:139.4420, batch:"247"},
+      {id:14, name:"呉中央営業所", pref:"広島県", address:"広島県呉市光町6-32", units:1, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.2380, lng:132.5520, batch:"247"},
+      {id:15, name:"若葉台営業所", pref:"東京都", address:"東京都稲城市坂浜1493-1", units:3, group:"B(3人)", date:"2026-11-05", time:"AM 9時～", lat:35.6150, lng:139.4785, batch:"247"},
+      {id:16, name:"つくば平塚営業所", pref:"茨城県", address:"茨城県つくば市東平塚1140-1", units:4, group:"B(3人)", date:"2026-11-08", time:"AM 9時～", lat:36.1050, lng:140.1085, batch:"247"},
+      {id:17, name:"水戸平須営業所", pref:"茨城県", address:"茨城県水戸市平須町234-26", units:4, group:"A(3人)", date:"2026-11-07", time:"PM 15時～", lat:36.3325, lng:140.4350, batch:"247"},
+      {id:18, name:"東久留米南町", pref:"東京都", address:"東京都東久留米市南町3-10-15", units:5, group:"B(3人)", date:"2026-11-05", time:"PM 14時～", lat:35.7480, lng:139.5250, batch:"247"},
+      {id:19, name:"杉並南荻窪営業所", pref:"東京都", address:"東京都杉並区南荻窪3-31-30", units:5, group:"B(3人)", date:"2026-11-03", time:"PM 15:30～", lat:35.7010, lng:139.6120, batch:"247"},
+      {id:20, name:"燕営業所", pref:"新潟県", address:"新潟県燕市小関1143-1", units:4, group:"A(3人)", date:"2026-11-05", time:"PM 15:30～", lat:37.6680, lng:138.9250, batch:"247"},
+      {id:21, name:"水戸見川営業所", pref:"茨城県", address:"茨城県水戸市見川町2131-1895", units:3, group:"A(3人)", date:"2026-11-07", time:"PM 14時～", lat:36.3680, lng:140.4380, batch:"247"},
+      {id:22, name:"港有明営業所", pref:"東京都", address:"東京都江東区有明3-15-13", units:4, group:"A(3人)", date:"2026-11-08", time:"AM 9時～", lat:35.6320, lng:139.7920, batch:"247"},
+      {id:23, name:"水戸東原営業所", pref:"茨城県", address:"茨城県水戸市東原2-10-37", units:5, group:"A(3人)", date:"2026-11-07", time:"AM 9時～", lat:36.3850, lng:140.4520, batch:"247"},
+      {id:24, name:"成城営業所", pref:"東京都", address:"東京都世田谷区成城1丁目4-19", units:3, group:"A(3人)", date:"2026-11-09", time:"PM 14時～", lat:35.6420, lng:139.6050, batch:"247"},
+      {id:25, name:"大和郡山営業所", pref:"奈良県", address:"奈良県大和郡山市豊浦町123-1", units:1, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.6450, lng:135.7820, batch:"247"},
+      {id:26, name:"東浦和営業所", pref:"埼玉県", address:"埼玉県さいたま市緑区大字間宮字中622-1", units:8, group:"A(3人)", date:"2026-11-06", time:"AM 9時～", lat:35.8750, lng:139.6920, batch:"247"},
+      {id:27, name:"長岡宮原営業所", pref:"新潟県", address:"新潟県長岡市宮原2丁目195-1", units:20, group:"A(3人)", date:"2026-11-05", time:"AM 9時～", lat:37.4350, lng:138.8520, batch:"247"},
+      {id:28, name:"港北綱島営業所", pref:"神奈川県", address:"神奈川県横浜市港北区新羽町2618-1", units:8, group:"B(3人)", date:"2026-11-06", time:"PM 14時～", lat:35.5350, lng:139.6150, batch:"247"},
+      {id:29, name:"瑞穂明前営業所", pref:"愛知県", address:"愛知県名古屋市瑞穂区明前町10-39", units:6, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:35.1180, lng:136.9250, batch:"247"},
+      {id:30, name:"徳島城東営業所", pref:"徳島県", address:"徳島県徳島市城東町1丁目194", units:9, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:34.0720, lng:134.5680, batch:"247"},
+      {id:31, name:"白藤営業所", pref:"熊本県", address:"熊本県熊本市西区上代4丁目12-26", units:6, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:32.7750, lng:130.6720, batch:"247"},
+      {id:32, name:"国立府中営業所", pref:"東京都", address:"東京都府中市四谷5-23-62 DPL国立府中1階", units:10, group:"B(3人)", date:"2026-11-04", time:"PM 14時～", lat:35.6650, lng:139.4420, batch:"247"},
+      {id:33, name:"大野城営業所", pref:"福岡県", address:"福岡県大野城市乙金東3-5-30", units:7, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:33.5350, lng:130.4950, batch:"247"},
+      {id:34, name:"福岡粕屋営業所", pref:"福岡県", address:"福岡県福岡市東区二又瀬新町8-45", units:4, group:"東京返送希望", date:"11/10～11/12", time:"AM 9時～17時", lat:33.6150, lng:130.4480, batch:"247"},
+      {id:35, name:"足立西保木間営業所", pref:"東京都", address:"東京都足立区西保木間3-7-1", units:15, group:"A(3人)", date:"2026-11-03", time:"AM 9時～", lat:35.7980, lng:139.8050, batch:"247"},
+      {id:36, name:"福島大玉営業所", pref:"福島県", address:"福島県安達郡大玉村大山字向原79-1", units:7, group:"B(3人)", date:"2026-11-07", time:"AM 10:30～", lat:37.5520, lng:140.3750, batch:"247"},
+      {id:37, name:"緑中山営業所", pref:"神奈川県", address:"神奈川県横浜市緑区上山1丁目15-1", units:5, group:"B(3人)", date:"2026-11-06", time:"PM 14時～", lat:35.5150, lng:139.5380, batch:"247"},
+      {id:38, name:"ＧＭ推進課 (銀座)", pref:"東京都", address:"東京都中央区銀座ヤマト銀座本社", units:16, group:"A(3人)", date:"11/10～11/12", time:"AM 9時～17時", lat:35.6710, lng:139.7650, batch:"247"}
     ];
 
+    // 2. 資料庫：第一ロット200台 (量產首批 200台主要樞紐據點)
+    const dataset200 = [
+      {id:101, name:"新東京主管支社", pref:"東京都", address:"東京都江東区新砂2-5-20", units:35, group:"第一ロット", date:"2026-11-16", time:"AM 9時～", lat:35.6660, lng:139.8250, batch:"200"},
+      {id:102, name:"羽田クロノゲート営業所", pref:"東京都", address:"東京都大田区羽田旭町11-1", units:30, group:"第一ロット", date:"2026-11-17", time:"AM 9時～", lat:35.5480, lng:139.7460, batch:"200"},
+      {id:103, name:"東京主管支社 (品川)", pref:"東京都", address:"東京都港区港南2-10-1", units:25, group:"第一ロット", date:"2026-11-18", time:"AM 9時～", lat:35.6280, lng:139.7400, batch:"200"},
+      {id:104, name:"城東主管支社", pref:"東京都", address:"東京都墨田区緑2-14-1", units:20, group:"第一ロット", date:"2026-11-19", time:"AM 9時～", lat:35.6940, lng:139.7990, batch:"200"},
+      {id:105, name:"城西主管支社 (杉並)", pref:"東京都", address:"東京都杉並区高円寺南5-3-1", units:20, group:"第一ロット", date:"2026-11-20", time:"AM 9時～", lat:35.7020, lng:139.6540, batch:"200"},
+      {id:106, name:"横浜主管支社", pref:"神奈川県", address:"神奈川県横浜市鶴見区大黒町1-1", units:25, group:"第一ロット", date:"2026-11-23", time:"AM 9時～", lat:35.4880, lng:139.6750, batch:"200"},
+      {id:107, name:"埼玉主管支社", pref:"埼玉県", address:"埼玉県戸田市新曽南4-3-1", units:20, group:"第一ロット", date:"2026-11-24", time:"AM 9時～", lat:35.8080, lng:139.6670, batch:"200"},
+      {id:108, name:"千葉主管支社", pref:"千葉県", address:"千葉県船橋市潮見町11", units:15, group:"第一ロット", date:"2026-11-25", time:"AM 9時～", lat:35.6790, lng:139.9830, batch:"200"},
+      {id:109, name:"中部ゲートウェイ", pref:"愛知県", address:"愛知県豊田市生駒町切戸21-1", units:10, group:"第一ロット", date:"2026-11-26", time:"AM 9時～", lat:35.0500, lng:137.0500, batch:"200"}
+    ];
+
+    let currentDatasetKey = '247'; // '247', '200', 'all'
+    let activeStations = [...dataset247];
     let map = null;
     let markers = [];
 
+    // Helper: 產生 Google Maps 搜尋導航連結
+    function getGoogleMapsUrl(s) {
+      const q = encodeURIComponent(`${s.name} ${s.address}`);
+      return `https://www.google.com/maps/search/?api=1&query=${q}`;
+    }
+
+    // 切換資料來源分頁 (247 / 200 / ALL)
+    function setDataset(key) {
+      currentDatasetKey = key;
+      
+      // 按鈕狀態更新
+      ['247', '200', 'all'].forEach(k => {
+        const btn = document.getElementById(`tab-data-${k}`);
+        if (k === key) {
+          btn.className = 'px-3 py-1.5 rounded-lg font-semibold bg-morandi-card text-morandi-sage shadow transition';
+        } else {
+          btn.className = 'px-3 py-1.5 rounded-lg font-semibold text-morandi-textMuted hover:text-white transition';
+        }
+      });
+
+      const tag = document.getElementById('activeDatasetTag');
+      if (key === '247') {
+        activeStations = [...dataset247];
+        tag.innerText = '247台樣機 (全數檢查)';
+        tag.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-morandi-sage/20 text-morandi-sage border border-morandi-sage/30 mono font-semibold';
+      } else if (key === '200') {
+        activeStations = [...dataset200];
+        tag.innerText = '第一ロット 200台';
+        tag.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-morandi-mauve/20 text-morandi-mauve border border-morandi-mauve/30 mono font-semibold';
+      } else {
+        activeStations = [...dataset247, ...dataset200];
+        tag.innerText = '全案 447台 (247+200)';
+        tag.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-morandi-slate/20 text-morandi-slate border border-morandi-slate/30 mono font-semibold';
+      }
+
+      updateTopStats();
+      updateMapMarkers();
+      renderTokyoCards();
+      renderPrefectures();
+      renderTable();
+    }
+
+    function updateTopStats() {
+      const totalUnits = activeStations.reduce((a, b) => a + b.units, 0);
+      const tokyoUnits = activeStations.filter(s => s.pref.includes('東京')).reduce((a, b) => a + b.units, 0);
+      const tokyoRatio = totalUnits > 0 ? ((tokyoUnits / totalUnits) * 100).toFixed(1) : 0;
+
+      document.getElementById('statTotalUnits').innerHTML = `${totalUnits} <span class="text-xs text-morandi-textMuted font-normal">台</span>`;
+      document.getElementById('statTotalStations').innerHTML = `${activeStations.length} <span class="text-xs text-morandi-textMuted font-normal">站</span>`;
+      document.getElementById('statTokyoShare').innerText = `${tokyoRatio}%`;
+    }
+
+    // 分頁導覽切換
     function navigate(tab) {
-      ['overview','prefs','list','tokyo'].forEach(t => {
-        const el = document.getElementById('view-' + t);
+      ['overview', 'tokyo', 'prefs', 'list'].forEach(t => {
+        const el = document.getElementById(`view-${t}`);
         if (el) el.classList.toggle('hidden', t !== tab);
       });
+
       document.querySelectorAll('.nav-btn').forEach(b => {
-        b.className = 'nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition';
+        b.className = 'nav-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-morandi-textMuted hover:text-white hover:bg-morandi-card/50 transition';
       });
-      const active = document.getElementById('nav-' + tab);
-      if (active) active.className = 'nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-teal-600 transition';
+
+      const active = document.getElementById(`nav-${tab}`);
+      if (active) active.className = 'nav-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-morandi-card border border-morandi-border transition';
 
       if (tab === 'tokyo') zoomTo('tokyo');
       else if (tab === 'overview' || tab === 'prefs') resetMapView();
 
-      if (map) {
-        setTimeout(() => map.invalidateSize(), 100);
-      }
-      if (window.location.hash !== '#' + tab) history.pushState(null, null, '#' + tab);
+      if (map) setTimeout(() => map.invalidateSize(), 150);
+      if (window.location.hash !== `#${tab}`) history.pushState(null, null, `#${tab}`);
     }
 
+    // Leaflet 日本地圖初始化
     function initMap() {
       if (typeof L === 'undefined') return;
-      try {
-        map = L.map('map', {
-          center: [36.2, 137.8],
-          zoom: 5,
-          scrollWheelZoom: true
+
+      map = L.map('map', {
+        center: [36.2, 137.8],
+        zoom: 5,
+        scrollWheelZoom: true
+      });
+
+      // 採用 ESRI 柔和街道日本圖資
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 18,
+        attribution: '&copy; Esri &mdash; YMT Morandi Edition'
+      }).addTo(map);
+
+      updateMapMarkers();
+      resetMapView();
+    }
+
+    function updateMapMarkers() {
+      if (!map) return;
+      markers.forEach(m => map.removeLayer(m.marker));
+      markers = [];
+
+      activeStations.forEach(s => {
+        const bg = s.batch === '200' ? '#a394a8' : 
+                   s.group.includes('A') ? '#7e9f8e' : 
+                   s.group.includes('B') ? '#7b92a8' : '#c09983';
+
+        const icon = L.divIcon({
+          html: `<div class="morandi-pin" style="background:${bg};width:${s.units > 12 ? 32 : 25}px;height:${s.units > 12 ? 32 : 25}px;">${s.units}</div>`,
+          iconSize: [s.units > 12 ? 32 : 25, s.units > 12 ? 32 : 25],
+          iconAnchor: [(s.units > 12 ? 32 : 25) / 2, (s.units > 12 ? 32 : 25) / 2]
         });
 
-        // 使用全球穩定、免 Key 的 ESRI 日本路網圖資
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-          maxZoom: 18,
-          attribution: '&copy; Esri &mdash; YMT Project'
-        }).addTo(map);
+        const gmapUrl = getGoogleMapsUrl(s);
 
-        stations.forEach(s => {
-          const bg = s.group.includes('A') ? '#0d9488' : s.group.includes('B') ? '#4f46e5' : '#d97706';
-          const icon = L.divIcon({
-            html: `<div class="custom-pin" style="background:${bg};width:${s.units > 10 ? 30 : 24}px;height:${s.units > 10 ? 30 : 24}px;">${s.units}</div>`,
-            iconSize: [s.units > 10 ? 30 : 24, s.units > 10 ? 30 : 24],
-            iconAnchor: [(s.units > 10 ? 30 : 24)/2, (s.units > 10 ? 30 : 24)/2]
-          });
-          const m = L.marker([s.lat, s.lng], { icon: icon }).addTo(map);
-          m.bindPopup(`
-            <div style="padding:10px;min-width:180px;">
-              <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
-                <span style="font-size:10px;color:#94a3b8;font-weight:bold;">#${String(s.id).padStart(2,'0')}</span>
-                <span style="font-size:10px;color:${bg};border:1px solid ${bg}44;padding:1px 4px;border-radius:4px;font-weight:bold;">${s.pref}</span>
-              </div>
-              <div style="font-weight:bold;color:#fff;font-size:13px;">${s.name}</div>
-              <div style="color:#94a3b8;font-size:11px;margin-bottom:6px;">${s.address}</div>
-              <div style="border-top:1px solid #1e293b;padding-top:4px;font-size:11px;">
-                台數: <b style="color:${bg}">${s.units} 台</b> ｜ ${s.group}<br>
-                排程: ${s.date} (${s.time})
-              </div>
+        const m = L.marker([s.lat, s.lng], { icon: icon }).addTo(map);
+        m.bindPopup(`
+          <div style="padding:10px;min-width:210px;font-family:sans-serif;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <span style="font-size:10px;color:#9aa3b2;font-weight:bold;">#${String(s.id).padStart(2,'0')}</span>
+              <span style="font-size:10px;background:${bg}33;color:${bg};border:1px solid ${bg}66;padding:1px 5px;border-radius:4px;font-weight:bold;">${s.pref}</span>
             </div>
-          `);
-          markers.push({ id: s.id, marker: m, data: s });
-        });
+            <div style="font-weight:bold;color:#edf1f5;font-size:13px;">${s.name}</div>
+            <div style="color:#9aa3b2;font-size:11px;margin-bottom:6px;">${s.address}</div>
+            <div style="border-top:1px solid #3a4252;padding-top:6px;font-size:11px;line-height:1.6;">
+              台數: <b style="color:${bg}">${s.units} 台</b> ｜ ${s.group}<br>
+              排程: ${s.date} (${s.time})
+            </div>
+            <a href="${gmapUrl}" target="_blank" style="display:block;margin-top:8px;padding:5px 8px;background:#3a4252;color:#edf1f5;border-radius:6px;text-align:center;text-decoration:none;font-size:11px;font-weight:600;">
+              📍 開啟 Google Maps 導航
+            </a>
+          </div>
+        `);
+        markers.push({ id: s.id, marker: m, data: s });
+      });
 
-        resetMapView();
-      } catch (e) {
-        console.error(e);
-      }
+      document.getElementById('mapSubtitle').innerText = `(共 ${activeStations.length} 所 / ${activeStations.reduce((a,b)=>a+b.units,0)} 台)`;
     }
 
     function resetMapView() {
-      if (map) {
+      if (map && markers.length > 0) {
         map.fitBounds([[32.6, 130.3], [37.8, 140.7]], { padding: [30, 30] });
-        document.getElementById('mapSubtitle').innerText = '(共 38 所 / 247 台)';
       }
     }
 
     function zoomTo(r) {
       if (!map) return;
-      if (r === 'tokyo') {
-        map.flyTo([35.6895, 139.6917], 10);
-        document.getElementById('mapSubtitle').innerText = '(東京都核心：15 所 / 129 台)';
-      } else if (r === 'kantou') {
-        map.flyTo([35.8, 139.8], 8);
-        document.getElementById('mapSubtitle').innerText = '(關東圈：24 所 / 174 台)';
-      } else if (r === 'west') {
-        map.flyTo([34.5, 134.0], 7);
-        document.getElementById('mapSubtitle').innerText = '(中西日本 / 返送希望區域)';
-      }
+      if (r === 'tokyo') map.flyTo([35.6895, 139.6917], 10);
+      else if (r === 'kantou') map.flyTo([35.8, 139.8], 8);
+      else if (r === 'west') map.flyTo([34.5, 134.0], 7);
     }
 
     function locate(id) {
@@ -384,27 +588,82 @@
       }
     }
 
+    // 東京都專區卡片渲染 (參考 derrick-yeh.github.io/YMT/#tokyo 樣式)
+    function renderTokyoCards() {
+      const tokyoList = activeStations.filter(s => s.pref.includes('東京'));
+      const container = document.getElementById('tokyoCardsGrid');
+      
+      if (tokyoList.length === 0) {
+        container.innerHTML = '<div class="col-span-3 text-center py-8 text-morandi-textMuted">目前所選批次無東京都營業所資料</div>';
+        return;
+      }
+
+      container.innerHTML = tokyoList.map(s => {
+        const isA = s.group.includes('A');
+        const badgeColor = isA ? 'text-morandi-sage bg-morandi-sage/15 border-morandi-sage/30' : 'text-morandi-slate bg-morandi-slate/15 border-morandi-slate/30';
+        const gmapUrl = getGoogleMapsUrl(s);
+
+        return `
+          <div class="p-4 bg-morandi-surface border border-morandi-border hover:border-morandi-slate/60 rounded-2xl transition flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-xs mb-2">
+                <span class="mono text-morandi-textMuted font-bold">#${String(s.id).padStart(2,'0')}</span>
+                <span class="text-[11px] px-2 py-0.5 rounded border ${badgeColor}">${s.group}</span>
+              </div>
+              <h4 class="font-bold text-morandi-textMain text-base mb-1">${s.name}</h4>
+              <p class="text-xs text-morandi-textMuted truncate mb-3" title="${s.address}">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 inline mr-1 text-morandi-textMuted"></i>${s.address}
+              </p>
+            </div>
+
+            <div class="pt-3 border-t border-morandi-border/80 flex items-center justify-between text-xs">
+              <div>
+                <span class="text-[10px] text-morandi-textMuted block">預定排程</span>
+                <span class="mono text-morandi-sand font-medium">${s.date}</span>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-morandi-textMuted block">點檢台數</span>
+                <span class="mono font-bold text-morandi-slate text-base">${s.units} <span class="text-xs font-normal">台</span></span>
+              </div>
+              <div class="flex items-center gap-1.5 ml-2">
+                <button type="button" onclick="locate(${s.id})" class="px-2 py-1 bg-morandi-card hover:bg-morandi-border text-morandi-sand rounded text-xs transition" title="地圖定位">
+                  地圖
+                </button>
+                <a href="${gmapUrl}" target="_blank" class="px-2.5 py-1 bg-morandi-slate/20 hover:bg-morandi-slate/30 text-morandi-slate border border-morandi-slate/40 rounded text-xs transition flex items-center gap-1">
+                  <i data-lucide="navigation" class="w-3 h-3"></i> 導航
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    // 各都縣排行榜
     function renderPrefectures() {
       const pMap = {};
-      stations.forEach(s => {
+      activeStations.forEach(s => {
         if (!pMap[s.pref]) pMap[s.pref] = { count: 0, list: [] };
         pMap[s.pref].count += s.units;
         pMap[s.pref].list.push(s.name);
       });
       const sorted = Object.entries(pMap).sort((a,b) => b[1].count - a[1].count);
 
-      document.getElementById('prefSelect').innerHTML = '<option value="ALL">全部都道府縣 (14)</option>' + sorted.map(([p, d]) => `
-        <option value="${p}">${p} (${d.count}台)</option>
+      // 下拉選單更新
+      document.getElementById('prefSelect').innerHTML = '<option value="ALL">全部都道府縣 (' + sorted.length + ')</option>' + sorted.map(([p, d]) => `
+        <option value="${p}">${p} (${d.count}台 / ${d.list.length}所)</option>
       `).join('');
 
-      document.getElementById('prefCards').innerHTML = sorted.map(([p, d]) => `
-        <div onclick="selectPref('${p}')" class="p-4 bg-slate-900 border border-slate-800 hover:border-teal-500 rounded-xl cursor-pointer transition">
+      // 卡片更新
+      document.getElementById('prefCardsGrid').innerHTML = sorted.map(([p, d]) => `
+        <div onclick="selectPref('${p}')" class="p-4 bg-morandi-surface border border-morandi-border hover:border-morandi-sage/50 rounded-2xl cursor-pointer transition">
           <div class="flex justify-between items-center mb-1">
-            <span class="font-bold text-white text-sm">${p}</span>
-            <span class="text-[11px] mono text-slate-400">${d.list.length} 所</span>
+            <span class="font-bold text-morandi-textMain text-sm">${p}</span>
+            <span class="text-[11px] mono text-morandi-textMuted">${d.list.length} 所</span>
           </div>
-          <div class="mono text-2xl font-bold text-teal-400">${d.count} <span class="text-xs font-normal text-slate-400">台</span></div>
-          <div class="mt-2 text-[10px] text-slate-500 truncate">${d.list.join('、')}</div>
+          <div class="mono text-2xl font-bold text-morandi-sage">${d.count} <span class="text-xs text-morandi-textMuted font-normal">台</span></div>
+          <div class="mt-2 text-[10px] text-morandi-textMuted truncate">${d.list.join('、')}</div>
         </div>
       `).join('');
     }
@@ -413,16 +672,17 @@
       document.getElementById('prefSelect').value = p;
       navigate('list');
       renderTable();
-      const st = stations.filter(s => s.pref.includes(p));
+      const st = activeStations.filter(s => s.pref.includes(p));
       if (st.length > 0 && map) map.flyTo([st[0].lat, st[0].lng], st.length > 3 ? 9 : 11);
     }
 
+    // 站點清單表格
     function renderTable() {
       const q = (document.getElementById('searchInput').value || '').toLowerCase();
       const p = document.getElementById('prefSelect').value;
       const g = document.getElementById('groupSelect').value;
 
-      const filtered = stations.filter(s => {
+      const filtered = activeStations.filter(s => {
         const matchQ = s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q) || s.date.includes(q);
         const matchP = (p === 'ALL') || s.pref.includes(p);
         const matchG = (g === 'ALL') || s.group.includes(g);
@@ -433,63 +693,58 @@
 
       document.getElementById('stationTableBody').innerHTML = filtered.map(s => {
         const isA = s.group.includes('A');
-        const isB = s.group.includes('B');
-        const badge = isA ? 'text-teal-400 bg-teal-500/10 border-teal-500/30' : isB ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30' : 'text-amber-400 bg-amber-500/10 border-amber-500/30';
+        const badge = isA ? 'text-morandi-sage bg-morandi-sage/15 border-morandi-sage/30' : 
+                      s.group.includes('B') ? 'text-morandi-slate bg-morandi-slate/15 border-morandi-slate/30' : 
+                      'text-morandi-clay bg-morandi-clay/15 border-morandi-clay/30';
+        const gmapUrl = getGoogleMapsUrl(s);
+
         return `
-          <tr class="hover:bg-slate-800/40 transition">
-            <td class="py-2.5 px-3 mono text-slate-500">#${String(s.id).padStart(2,'0')}</td>
-            <td class="py-2.5 px-3 font-semibold text-white">${s.name}</td>
-            <td class="py-2.5 px-3">${s.pref}</td>
-            <td class="py-2.5 px-3 mono font-bold text-teal-400">${s.units} <span class="text-[10px] text-slate-400">台</span></td>
-            <td class="py-2.5 px-3"><span class="text-[10px] px-2 py-0.5 rounded border ${badge}">${s.group}</span></td>
-            <td class="py-2.5 px-3 mono text-slate-300">${s.date}</td>
-            <td class="py-2.5 px-3 text-slate-400 truncate max-w-xs" title="${s.address}">${s.address}</td>
-            <td class="py-2.5 px-3 text-right">
-              <button type="button" onclick="locate(${s.id})" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-teal-400 rounded text-xs">📍 定位</button>
+          <tr class="hover:bg-morandi-card/40 transition">
+            <td class="py-3 px-4 mono text-morandi-textMuted">#${String(s.id).padStart(2,'0')}</td>
+            <td class="py-3 px-4 font-semibold text-morandi-textMain">${s.name}</td>
+            <td class="py-3 px-4 text-morandi-sand">${s.pref}</td>
+            <td class="py-3 px-4 mono font-bold text-morandi-sage">${s.units} <span class="text-[10px] text-morandi-textMuted">台</span></td>
+            <td class="py-3 px-4"><span class="text-[10px] px-2 py-0.5 rounded border ${badge}">${s.group}</span></td>
+            <td class="py-3 px-4 mono text-morandi-sand">${s.date}</td>
+            <td class="py-3 px-4 text-morandi-textMuted">${s.time}</td>
+            <td class="py-3 px-4 text-morandi-textMuted truncate max-w-xs" title="${s.address}">${s.address}</td>
+            <td class="py-3 px-4 text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <button type="button" onclick="locate(${s.id})" class="px-2 py-1 bg-morandi-card hover:bg-morandi-border text-morandi-sand rounded text-xs transition">
+                  定位
+                </button>
+                <a href="${gmapUrl}" target="_blank" class="px-2 py-1 bg-morandi-slate/20 hover:bg-morandi-slate/30 text-morandi-slate border border-morandi-slate/40 rounded text-xs transition flex items-center gap-1">
+                  導航
+                </a>
+              </div>
             </td>
           </tr>
         `;
       }).join('');
+      lucide.createIcons();
     }
 
-    function renderTokyo() {
-      document.getElementById('tokyoCards').innerHTML = stations.filter(s => s.pref.includes('東京')).map(s => `
-        <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl hover:border-sky-500/50 transition">
-          <div class="flex justify-between text-xs text-slate-500 mb-1">
-            <span class="mono">#${String(s.id).padStart(2,'0')}</span>
-            <span class="text-sky-400">${s.group}</span>
-          </div>
-          <div class="font-bold text-white text-sm">${s.name}</div>
-          <div class="text-xs text-slate-400 truncate mt-1">${s.address}</div>
-          <div class="flex justify-between items-center mt-3 pt-2 border-t border-slate-800 text-xs">
-            <span class="mono text-slate-400">${s.date}</span>
-            <div class="flex items-center gap-2">
-              <span class="mono font-bold text-sky-400">${s.units} 台</span>
-              <button type="button" onclick="locate(${s.id})" class="px-2 py-0.5 bg-slate-800 text-sky-400 rounded hover:bg-slate-700">定位</button>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
+    // 匯出 CSV
     function exportCSV() {
-      let csv = "ID,營業所名,都道府縣,住所,台數,組別,預定作業日,時段\n";
-      stations.forEach(s => {
-        csv += `${s.id},"${s.name}","${s.pref}","${s.address}",${s.units},"${s.group}","${s.date}","${s.time}"\n`;
+      let csv = "ID,營業所名,都道府縣,住所,台數,組別,預定作業日,時段,批次,GoogleMaps連結\n";
+      activeStations.forEach(s => {
+        csv += `${s.id},"${s.name}","${s.pref}","${s.address}",${s.units},"${s.group}","${s.date}","${s.time}","${s.batch}","${getGoogleMapsUrl(s)}"\n`;
       });
       const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "YMT_247台點檢清單.csv";
+      a.download = `YMT_點檢名冊_${currentDatasetKey}.csv`;
       a.click();
     }
 
+    // 系統載入
     window.addEventListener('DOMContentLoaded', () => {
-      renderPrefectures();
-      renderTable();
-      renderTokyo();
-      navigate(window.location.hash.replace('#','') || 'overview');
+      try { lucide.createIcons(); } catch(e) {}
+      setDataset('247');
       initMap();
+
+      const hash = window.location.hash.replace('#','') || 'overview';
+      navigate(hash);
     });
 
     window.addEventListener('hashchange', () => {
